@@ -3,7 +3,7 @@
 #include "ResourceManager.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
-#include "Cube.h"
+#include "Sphere.h"
 #include "Cubemap.h"
 #include "AudioPlayer.h"
 #include "Camera.h"
@@ -11,6 +11,10 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_glfw.h"
 
 #include <vector>
 
@@ -38,17 +42,18 @@ private:
 	void SetupFBO(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetupForHDR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetLightVarsInShader(Shader* shader);
-	void SetVertexShaderVarsForDeferredShadingAndUse(Cube* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
-	void SetShaderVarsAndUse(Cube* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
-	glm::mat4 CreateModelMatrix(Cube* pCube, AudioPlayer* pAudioPlayer);
+	void SetVertexShaderVarsForDeferredShadingAndUse(Sphere* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	void SetShaderVarsAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	glm::mat4 CreateModelMatrix(Sphere* pSphere, AudioPlayer* pAudioPlayer);
 	
 public:
-	void AddCube(std::string name, Cube* cube);
+	void AddSphere(std::string name, Sphere* pSphere);
 	void AddModel(std::string name, std::string path, ResourceManager* pResourceManager);
-	std::unordered_map<std::string, Cube*>& GetCubeMap();
+	std::unordered_map<std::string, Sphere*>& GetSphereMap();
 	
-	void SetTextureForCube(Texture* texture, std::string name);
-	std::vector<Shader*> CubeShaderList();
+	void SetTextureForSphere(Texture* texture, std::string name);
+	std::vector<Shader*> SphereShaderList();
+	std::vector<GLuint>* GetDefShadingGBufferTextures();
 
 public:
 	// screen shader vars
@@ -61,14 +66,21 @@ public:
 
 	// Def. Shading
 	bool mDeferredShadingOn;
+	
+	// Clear color
+	glm::vec3 mClearColor;
+
+	GLuint mGBuffer, mAttachments[4], mGRBODepth;
+	std::vector<GLuint> mGBufferTextures;
 
 private:
 	// outline properties
-	glm::vec3 mSelectedCubeOutlineColor = glm::vec3(10.0, 10.0, 0.0);
-	float mSelectedCubeThickness = 0.03f;
+	glm::vec3 mSelectedSphereOutlineColor = glm::vec3(10.0f, 10.0f, 0.0f);
+
+	float mSelectedSphereThickness = 0.03f;
 
 	// cube storage
-	std::unordered_map<std::string, Cube*> mCubeDS;
+	std::unordered_map<std::string, Sphere*> mSphereDS;
 
 	// Model Storage
 	std::unordered_map<std::string, Model*> mModelDS;
@@ -97,13 +109,14 @@ private:
 	GLuint mHDRRBO, mHDRFBO, mHDRTextureColorBuffer;
 
 	// G-Buffer framebuffer, color textures for different properties and a depth buffer
-	GLuint mGBuffer, mGPosition, mGNormal, mGDiffuseColor, mGSpecularColor, mAttachments[4], mGRBODepth;
+	//GLuint mGBuffer, mGPosition, mGNormal, mGDiffuseColor, mGSpecularColor, mAttachments[4], mGRBODepth;
+
 	
 	// depth framebuffer for shadow-mapping
 	GLuint mShadowFBO, mShadowDepthMap;
 
 	// Shaders that cubes can use. Each cube can decide which one to use
-	std::vector<Shader*> mCubeShaders;
+	std::vector<Shader*> mSphereShaders;
 
 	// vertex attributes for a quad that fills the entire screen in NDC
 	GLfloat quadVertices[24] = { 

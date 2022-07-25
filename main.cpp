@@ -81,19 +81,10 @@ int main() {
 
     srand(glfwGetTime());
 
-    pRenderer->AddCube("PBR Cube", new Cube(pResourceManager, CubeType::PBR));
-    pRenderer->AddCube("Light Cube", new Cube(pResourceManager, CubeType::LIGHT));
+    pRenderer->AddSphere("PBR Sphere", new Sphere(pResourceManager, SphereType::PBR));
+    pRenderer->AddSphere("Light Sphere", new Sphere(pResourceManager, SphereType::LIGHT));
 
     pRenderer->AddModel("Backpack", "../resources/objects/backpack/backpack.obj", pResourceManager);
-
-    //for (int i = 0; i < 100; i++) {
-    //    pRenderer->AddCube("Jimin Cube " + std::to_string(i), new Cube(pResourceManager, CubeType::PHONG));
-    //}
-
-    //for (int i = 0; i < 5; i++) {
-    //    pRenderer->AddCube("Light Cube " + std::to_string(i), new Cube(pResourceManager, CubeType::LIGHT));
-    //}
-
     
     // Render loop
     // -----------

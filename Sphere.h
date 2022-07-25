@@ -13,7 +13,7 @@
 #include "AudioPlayer.h"
 #include "ResourceManager.h"
 
-enum class CubeType {
+enum class SphereType {
 	GLOWY,
 	PHONG,
 	PBR,
@@ -50,17 +50,17 @@ struct Transform {
 		: position(_position), scale(_scale), rotation(_rotation){}
 };
 
-class Cube
+class Sphere
 {
 public:
-	Cube(ResourceManager* pResourceManager, CubeType type) {
+	Sphere(ResourceManager* pResourceManager, SphereType type) {
 		mTransform = std::make_unique<Transform>(glm::vec3(rand() % 1, rand() % 1, rand() % 1), glm::vec3(0.5), glm::vec3(30));
 		mMaterial = std::make_unique<Material>(glm::vec3(0.2f), glm::vec3(0.5f), glm::vec3(0.5f), 32.0f);
 		mMaterialPBR = std::make_unique<MaterialPBR>(glm::vec3(0.2f), 0.5f, 0.5f, 0.5f);
 
-		mCubeType = type;
+		mType = type;
 
-		if (type == CubeType::LIGHT) {
+		if (type == SphereType::LIGHT) {
 			mTransform->scale = glm::vec3(0.02f);
 			mMaterial->ambient = glm::vec3(1.0f); 
 		}
@@ -68,14 +68,14 @@ public:
 		mTexture = pResourceManager->GetTexture("Jimin");
 	}
 
-	~Cube() {}
+	~Sphere() {}
 
 	Texture* mTexture;
 	std::unique_ptr<Transform>(mTransform);
 	std::unique_ptr<Material>(mMaterial);
 	std::unique_ptr<MaterialPBR>(mMaterialPBR);
 
-	CubeType mCubeType;
+	SphereType mType;
 	std::string mName;
 
 	bool mIsSelected = false;

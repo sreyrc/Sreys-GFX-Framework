@@ -1,9 +1,9 @@
 #version 330 core
 
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec3 gAlbedo;
-layout (location = 3) out vec3 gRoughMetalAO;
+layout (location = 0) out vec4 gPosition;
+layout (location = 1) out vec4 gNormal;
+layout (location = 2) out vec4 gAlbedo;
+layout (location = 3) out vec4 gRoughMetalAO;
 
 in vec2 TexCoords;
 in vec3 FragPos;
@@ -16,8 +16,8 @@ uniform float metalness;
 uniform float ao;
 
 void main() {
-	gPosition = FragPos;
-	gNormal = normalize(Normal);
-	gAlbedo = albedo;
-	gRoughMetalAO = vec3(roughness, metalness, ao);
+	gPosition = vec4(FragPos, 1.0);
+	gNormal = vec4(normalize(Normal), 1.0);
+	gAlbedo = vec4(albedo, 1.0f);
+	gRoughMetalAO = vec4(roughness, metalness, ao, 1.0f);
 }
