@@ -6,7 +6,6 @@ class CubeMesh
 {
 public:
 	CubeMesh() {
-        //GLuint VAO, VBO;
 
         glGenVertexArrays(1, &mVAO);
         glGenBuffers(1, &mVBO);

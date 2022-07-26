@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 #include <vector>
 #include <irrklang/irrKlang.h>
@@ -20,7 +21,7 @@
 const int SHADOW_MAP_WIDTH = 2048;
 const int SHADOW_MAP_HEIGHT = 2048;
 
-// taken from LearnOpenGL
+// error checking code - taken from LearnOpenGL
 GLenum glCheckError_(const char* file, int line)
 {
 	GLenum errorCode;
@@ -43,20 +44,21 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__) 
 
-Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cubemap) : mCubeMesh(new CubeMesh()), mSphereMesh(new SphereMesh()),
-//proj(glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, 0.1f, 100.0f)),
-mProj(glm::perspective(glm::radians(45.0f), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f)),
-mCubemap(_cubemap), mQuadVAO(0), mQuadVBO(0), mSkyVAO(0), mSkyVBO(0), mFBO(0), mRBO(0), mTextureColorBuffer(0), mImageFilters(new ImageFilters),
-mScreenShader(new Shader("ScreenShader.vert", "ScreenShader.frag")),
-mOutlineShader(new Shader("Outlining.vert", "Outlining.frag")),
-mGBufferShader(new Shader("GBufferShader.vert", "GBufferShader.frag")),
-mGBufferShaderPBR(new Shader("GBufferShader.vert", "GBufferShaderPBR.frag")),
-mDeferredShadingLightingShader(new Shader("DeferredLightingShader.vert", "DeferredLightingShader.frag")),
-mDeferredShadingLightingShaderPBR(new Shader("DeferredLightingShader.vert", "DeferredLightingShaderPBR.frag")),
-mHDRShader(new Shader("HDR.vert", "HDR.frag")),
-mSkyboxShader(new Shader("Skybox.vert", "Skybox.frag")),
-mModelShader(new Shader("TexPhongModel.vert", "TexPhongModel.frag")),
-mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClearColor(glm::vec3(0)), mGBufferTextures(4)
+Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cubemap) :
+	mCubeMesh(new CubeMesh()), mSphereMesh(new SphereMesh()), mQuadMesh(new QuadMesh()),
+	//proj(glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, 0.1f, 100.0f)),
+	mProj(glm::perspective(glm::radians(45.0f), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f)),
+	mCubemap(_cubemap), mSkyVAO(0), mSkyVBO(0), mFBO(0), mRBO(0), mTextureColorBuffer(0), mImageFilters(new ImageFilters),
+	mScreenShader(new Shader("ScreenShader.vert", "ScreenShader.frag")),
+	mOutlineShader(new Shader("Outlining.vert", "Outlining.frag")),
+	mGBufferShader(new Shader("GBufferShader.vert", "GBufferShader.frag")),
+	mGBufferShaderPBR(new Shader("GBufferShader.vert", "GBufferShaderPBR.frag")),
+	mDeferredShadingLightingShader(new Shader("DeferredLightingShader.vert", "DeferredLightingShader.frag")),
+	mDeferredShadingLightingShaderPBR(new Shader("DeferredLightingShader.vert", "DeferredLightingShaderPBR.frag")),
+	mHDRShader(new Shader("HDR.vert", "HDR.frag")),
+	mSkyboxShader(new Shader("Skybox.vert", "Skybox.frag")),
+	mModelShader(new Shader("TexPhongModel.vert", "TexPhongModel.frag")),
+	mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClearColor(glm::vec3(0)), mGBufferTextures(4)
 {
 	mSphereShaders.push_back(new Shader("Shader.vert", "Shader.frag"));
 	mSphereShaders.push_back(new Shader("TexPhong.vert", "TexPhong.frag"));
@@ -101,7 +103,6 @@ mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClea
 	mImageFilters->invert = false;
 
 	SetupSkybox();
-	SetupQuadVAO();
 	SetupForHDR(SCREEN_WIDTH, SCREEN_HEIGHT);
 	SetupForDeferredShading(SCREEN_WIDTH, SCREEN_HEIGHT);
 	SetupFBO(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -132,7 +133,7 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 	mProj = glm::perspective(glm::radians(pCamera->mZoom),
 		static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f);
 
-	mSphereMesh->BindVAO();
+	//mSphereMesh->BindVAO();
 
 	// if doing deferred shading
 	if (mDeferredShadingOn) {
@@ -147,17 +148,8 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		// -------------- Load all geometry info of Phong-lit spheres into the FBO (multiple render targets) 
 		// Now only this: Load all geometry info of PBR-lit spheres into the FBO (multiple render targets) 
 		for (auto& [name, shape] : mShapeDS) {
-			if (shape->mShading == ShapeShading::PBR) {
-				if (shape->mShape == "Sphere") {
-					mSphereMesh->BindVAO();
-					SetVertexShaderVarsForDeferredShadingAndUse(shape, pCamera, pAudioPlayer);
-					glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
-				}
-				if (shape->mShape == "Cube") {
-					mCubeMesh->BindVAO();
-					SetVertexShaderVarsForDeferredShadingAndUse(shape, pCamera, pAudioPlayer);
-					glDrawArrays(GL_TRIANGLES, 0, 36);
-				}
+			if (shape->mShading != ShapeShading::LIGHT) {
+				SetShapeAndDraw(shape, mDeferredShadingOn, pCamera, pAudioPlayer);
 			}
 		}
 
@@ -166,7 +158,8 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 
 		// Use the G-Buffer textures for info on how to light the scene 
 		// All drawn on a screen-sized quad
-		glBindVertexArray(mQuadVAO);
+		//glBindVertexArray(mQuadVAO);
+		mQuadMesh->BindVAO();
 		mDeferredShadingLightingShaderPBR->Use();
 
 		glActiveTexture(GL_TEXTURE0);
@@ -219,7 +212,7 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		//	model->Draw(mModelShader);
 		//}
 
-		mSphereMesh->BindVAO();
+		//mSphereMesh->BindVAO();
 		for (const auto& [name, shape] : mShapeDS) {
 			// if shape is selected - edit stencil buffer (for outlining)
 			if (shape->mIsSelected) {
@@ -227,20 +220,18 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 				glStencilFunc(GL_ALWAYS, 1, 0xFF);
 				glStencilMask(0xFF);
 
-				SetShaderVarsAndUse(shape, pCamera, pAudioPlayer);
-				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				SetShapeAndDraw(shape, mDeferredShadingOn, pCamera, pAudioPlayer);
 
 				glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 				glStencilMask(0x00);
 			}
 			else {
-				SetShaderVarsAndUse(shape, pCamera, pAudioPlayer);
-				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				SetShapeAndDraw(shape, mDeferredShadingOn, pCamera, pAudioPlayer);
 			}
 		}
 	}
 	//glDisable(GL_DEPTH_TEST); // <--- Why? Still don't understand
-	mSphereMesh->BindVAO();
+	//mSphereMesh->BindVAO();
 	// draw the outline for the selected cube
 	if (!mDeferredShadingOn) {
 		mOutlineShader->Use();
@@ -253,7 +244,15 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 			if (shape->mIsSelected) {
 				glm::mat4 model = CreateModelMatrix(shape, pAudioPlayer);
 				mOutlineShader->SetMat4("model", model);
-				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				if (shape->mShape == "Sphere") {
+					glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				}
+				if (shape->mShape == "Cube") {
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
+				if (shape->mShape == "Quad") {
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				}
 			}
 		}
 
@@ -283,13 +282,13 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 	mHDRShader->Use();
 	mHDRShader->SetInt("hdrOn", mHDROn);
 	mHDRShader->SetFloat("exposure", mExposure);
-	glBindVertexArray(mQuadVAO);
+	mQuadMesh->BindVAO();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mHDRTextureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	// post processing pass
-
+	// ------ Post-Processing Pass ------
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	mScreenShader->Use();
@@ -297,7 +296,7 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 	mScreenShader->SetFloat("t_blur", mImageFilters->blur);
 	mScreenShader->SetFloat("t_outline", mImageFilters->outline);
 	mScreenShader->SetInt("t_invert", mImageFilters->invert);
-	glBindVertexArray(mQuadVAO);
+	mQuadMesh->BindVAO();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mTextureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -338,24 +337,6 @@ void Renderer::SetupSkybox() {
 	glBindVertexArray(0);
 
 	mSkyboxShader->SetInt("skybox", 0);
-}
-
-void Renderer::SetupQuadVAO() {
-	glGenVertexArrays(1, &mQuadVAO);
-	glGenBuffers(1, &mQuadVBO);
-
-	glBindVertexArray(mQuadVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, mQuadVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 2));
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0);
 }
 
 void Renderer::SetupForDeferredShading(int SCREEN_WIDTH, int SCREEN_HEIGHT) {
@@ -475,83 +456,118 @@ void Renderer::SetLightVarsInShader(Shader* shader) {
 	shader->SetInt("numberOfLights", i);
 }
 
-void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
-	glm::mat4 model = CreateModelMatrix(pSphere, pAudioPlayer);
+void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* pAudioPlayer) {
 
-	if (pSphere->mShading == ShapeShading::PHONG) {
-		mGBufferShader->Use();
-		mGBufferShader->SetMat4("model", model);
-		mGBufferShader->SetMat4("view", pCamera->GetViewMatrix());
-		mGBufferShader->SetMat4("proj", mProj);
+	//if (pShape->mShading == ShapeShading::PHONG) {
+	//	mGBufferShader->Use();
+	//	mGBufferShader->SetMat4("model", model);
+	//	mGBufferShader->SetMat4("view", pCamera->GetViewMatrix());
+	//	mGBufferShader->SetMat4("proj", mProj);
 
-		if (pSphere->mTexture) {
-			glActiveTexture(GL_TEXTURE0);
-			pSphere->mTexture->Bind();
-		}
-		mGBufferShader->SetVec3("diffuse", pSphere->mMaterial->diffuse);
-		mGBufferShader->SetVec3("specular", pSphere->mMaterial->specular);
-	}
-	else {
+	//	if (pShape->mTexture) {
+	//		glActiveTexture(GL_TEXTURE0);
+	//		pShape->mTexture->Bind();
+	//	}
+	//	mGBufferShader->SetVec3("diffuse", pShape->mMaterial->diffuse);
+	//	mGBufferShader->SetVec3("specular", pShape->mMaterial->specular);
+	//}
+	if (pShape->mShading == ShapeShading::PBR) {
+		glm::mat4 model = CreateModelMatrix(pShape, pAudioPlayer);
 		mGBufferShaderPBR->Use();
 		mGBufferShaderPBR->SetMat4("model", model);
 		mGBufferShaderPBR->SetMat4("view", pCamera->GetViewMatrix());
 		mGBufferShaderPBR->SetMat4("proj", mProj);
 
-		mGBufferShaderPBR->SetVec3("albedo", pSphere->mMaterialPBR->albedo);
-		mGBufferShaderPBR->SetFloat("roughness", pSphere->mMaterialPBR->roughness);
-		mGBufferShaderPBR->SetFloat("metalness", pSphere->mMaterialPBR->metalness);
-		mGBufferShaderPBR->SetFloat("ao", pSphere->mMaterialPBR->ao);
+		mGBufferShaderPBR->SetVec3("albedo", pShape->mMaterialPBR->albedo);
+		mGBufferShaderPBR->SetFloat("roughness", pShape->mMaterialPBR->roughness);
+		mGBufferShaderPBR->SetFloat("metalness", pShape->mMaterialPBR->metalness);
+		mGBufferShaderPBR->SetFloat("ao", pShape->mMaterialPBR->ao);
 	}
 }
 
-void Renderer::SetShaderVarsAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
+void Renderer::SetShaderVarsAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* pAudioPlayer) {
 
-	glm::mat4 model = CreateModelMatrix(pSphere, pAudioPlayer);
-	Shader* shader = mSphereShaders[static_cast<int>(pSphere->mShading)];
+	glm::mat4 model = CreateModelMatrix(pShape, pAudioPlayer);
+	Shader* shader = mSphereShaders[static_cast<int>(pShape->mShading)];
 
 	shader->Use();
 	shader->SetMat4("model", model);
 	shader->SetMat4("view", pCamera->GetViewMatrix());
 	shader->SetMat4("proj", mProj);
 
-	if (pSphere->mShading == ShapeShading::GLOWY) {
+	if (pShape->mShading == ShapeShading::GLOWY) {
 		shader->SetFloat("time", static_cast<float>(glfwGetTime()));
 	}
-	else if (pSphere->mShading == ShapeShading::PHONG) {
-		if (pSphere->mTexture) {
+	else if (pShape->mShading == ShapeShading::PHONG) {
+		if (pShape->mTexture) {
 			glActiveTexture(GL_TEXTURE0);
-			pSphere->mTexture->Bind();
+			pShape->mTexture->Bind();
 		}
 		SetLightVarsInShader(shader);
-		shader->SetVec3("material.ambient", pSphere->mMaterial->ambient + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 70000));
-		shader->SetVec3("material.diffuse", pSphere->mMaterial->diffuse);
-		shader->SetVec3("material.specular", pSphere->mMaterial->specular);
-		shader->SetFloat("material.shininess", pSphere->mMaterial->shininess);
+		shader->SetVec3("material.ambient", pShape->mMaterial->ambient + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 70000));
+		shader->SetVec3("material.diffuse", pShape->mMaterial->diffuse);
+		shader->SetVec3("material.specular", pShape->mMaterial->specular);
+		shader->SetFloat("material.shininess", pShape->mMaterial->shininess);
 		shader->SetVec3("viewPos", pCamera->mPosition);
 	}
-	else if (pSphere->mShading == ShapeShading::PBR) {
-		if (pSphere->mTexture) {
+	else if (pShape->mShading == ShapeShading::PBR) {
+		if (pShape->mTexture) {
 			glActiveTexture(GL_TEXTURE0);
-			pSphere->mTexture->Bind();
+			pShape->mTexture->Bind();
 		}
 		SetLightVarsInShader(shader);
-		shader->SetVec3("albedo", pSphere->mMaterialPBR->albedo);
-		shader->SetFloat("metalness", pSphere->mMaterialPBR->metalness);
-		shader->SetFloat("roughness", pSphere->mMaterialPBR->roughness);
-		shader->SetFloat("ao", pSphere->mMaterialPBR->ao);
+		shader->SetVec3("albedo", pShape->mMaterialPBR->albedo);
+		shader->SetFloat("metalness", pShape->mMaterialPBR->metalness);
+		shader->SetFloat("roughness", pShape->mMaterialPBR->roughness);
+		shader->SetFloat("ao", pShape->mMaterialPBR->ao);
 	}
-	else if (pSphere->mShading == ShapeShading::LIGHT) {
-		shader->SetVec3("lightColor", pSphere->mMaterial->ambient);
+	else if (pShape->mShading == ShapeShading::LIGHT) {
+		shader->SetVec3("lightColor", pShape->mMaterial->ambient);
+	}
+}
+
+void Renderer::SetShapeAndDraw(Shape* pShape, bool defShadingOn, Camera* pCamera, AudioPlayer* pAudioPlayer) {
+	//if (pShape->mShading == ShapeShading::PBR) {
+	if (pShape->mShape == "Sphere") {
+		mSphereMesh->BindVAO();
+		defShadingOn ? SetVertexShaderVarsForDeferredShadingAndUse(pShape, pCamera, pAudioPlayer)
+			: SetShaderVarsAndUse(pShape, pCamera, pAudioPlayer);
+		glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+	}
+	else if (pShape->mShape == "Cube") {
+		mCubeMesh->BindVAO();
+		defShadingOn ? SetVertexShaderVarsForDeferredShadingAndUse(pShape, pCamera, pAudioPlayer)
+			: SetShaderVarsAndUse(pShape, pCamera, pAudioPlayer);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+	else if (pShape->mShape == "Quad") {
+		mQuadMesh->BindVAO();
+		defShadingOn ? SetVertexShaderVarsForDeferredShadingAndUse(pShape, pCamera, pAudioPlayer)
+			: SetShaderVarsAndUse(pShape, pCamera, pAudioPlayer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
 
 glm::mat4 Renderer::CreateModelMatrix(Shape* pShape, AudioPlayer* pAudioPlayer) {
 	glm::mat4 model = glm::mat4(1.0f);
+	//glm::vec3 xNorm(1.0f, 0.0f, 0.0f);
+	//glm::vec3 yNorm(0.0f, 1.0f, 0.0f);
+	//glm::vec3 zNorm(0.0f, 0.0f, 1.0f);
 	model = glm::translate(model, pShape->mTransform->position);
 	model = glm::scale(model, glm::vec3(pShape->mTransform->scale) + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 100000));
-	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	//model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.x), xNorm); // Rotate about X axis
+	//yNorm = glm::rotate(yNorm, glm::radians(-pShape->mTransform->rotation.x), xNorm);
+	//model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.y), yNorm); // Rotate about Y axis
+	//zNorm = glm::rotate(zNorm, glm::radians(-pShape->mTransform->rotation.y), yNorm);
+	//zNorm = glm::rotate(zNorm, glm::radians(-pShape->mTransform->rotation.x), xNorm);
+	//model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.z), zNorm); // Rotate about Z axis
+	glm::vec3 x = glm::vec3(1.0f, 0.0f, 0.0f) * glm::radians(pShape->mTransform->rotation.x);
+	glm::vec3 y = glm::vec3(0.0f, 1.0f, 0.0f) * glm::radians(pShape->mTransform->rotation.y);
+	glm::vec3 z = glm::vec3(0.0f, 0.0f, 1.0f) * glm::radians(pShape->mTransform->rotation.z);
+	glm::vec3 r = x + y + z;
+	//glm::mat4 m;
+	model = glm::rotate(model, glm::length(r), glm::normalize(r));
+
 	return model;
 }
 

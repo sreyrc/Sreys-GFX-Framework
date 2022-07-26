@@ -3,6 +3,7 @@
 #include "ResourceManager.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
+#include "QuadMesh.h"
 #include "Shape.h"
 #include "Cubemap.h"
 #include "AudioPlayer.h"
@@ -37,13 +38,13 @@ private:
 	// Setup Stuff
 	void SetupForShadows();
 	void SetupSkybox();
-	void SetupQuadVAO();
 	void SetupForDeferredShading(int SCREEN_WIDTH, int SCREEN_HEIGHT);
 	void SetupFBO(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetupForHDR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetLightVarsInShader(Shader* shader);
 	void SetVertexShaderVarsForDeferredShadingAndUse(Shape* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
 	void SetShaderVarsAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	void SetShapeAndDraw(Shape* pShape, bool defShadingOn, Camera* pCamera, AudioPlayer* pAudioPlayer);
 	glm::mat4 CreateModelMatrix(Shape* pSphere, AudioPlayer* pAudioPlayer);
 	
 public:
@@ -85,8 +86,11 @@ private:
 
 	// Model Storage
 	std::unordered_map<std::string, Model*> mModelDS;
+	
+	// Meshes
 	CubeMesh* mCubeMesh;
 	SphereMesh* mSphereMesh;
+	QuadMesh* mQuadMesh;
 
 	// Shaders
 	Shader* mScreenShader, *mSkyboxShader, *mOutlineShader, *mLightBlockShader, *mGBufferShader, *mGBufferShaderPBR,
@@ -96,9 +100,6 @@ private:
 	glm::mat4 mProj;
 
 	Cubemap* mCubemap;
-
-	// Quad mesh
-	GLuint mQuadVAO, mQuadVBO;
 
 	// Skybox Mesh
 	GLuint mSkyVAO, mSkyVBO;
@@ -118,18 +119,6 @@ private:
 
 	// Shaders that cubes can use. Each cube can decide which one to use
 	std::vector<Shader*> mSphereShaders;
-
-	// vertex attributes for a quad that fills the entire screen in NDC
-	GLfloat quadVertices[24] = { 
-	// positions   // texCoords
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	-1.0f, -1.0f,  0.0f, 0.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-	 1.0f,  1.0f,  1.0f, 1.0f
-	};
 
 	GLfloat mSkyboxVertices[108] = {
 		// positions          

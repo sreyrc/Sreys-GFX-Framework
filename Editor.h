@@ -44,6 +44,7 @@ public:
 
 		mShapeGeometryList.push_back("Cube");
 		mShapeGeometryList.push_back("Sphere");
+		mShapeGeometryList.push_back("Quad");
 	}
 
 	~Editor() {
@@ -82,7 +83,7 @@ public:
 			ImGui::EndListBox();
 		}
 		if (ImGui::Button("+")) {
-			pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PHONG));
+			pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PBR));
 		}
 		ImGui::End();
 

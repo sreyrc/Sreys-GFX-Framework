@@ -8,8 +8,7 @@
 class SphereMesh {
 
 public:
-	SphereMesh(): mVAO(0), mVBO(0), mIBO(0) {
-
+	SphereMesh(): mVAO(0), mVBO(0), mIBO(0), mIndexCount(0) {
 
         glGenVertexArrays(1, &mVAO);
 
@@ -61,8 +60,6 @@ public:
             }
             oddRow = !oddRow;
         }
-       // indexCount = static_cast<unsigned int>(mIndices.size());
-
 
         for (unsigned int i = 0; i < positions.size(); ++i)
         {
@@ -105,9 +102,6 @@ public:
 
 private:
 	GLuint mVAO, mVBO, mIBO;
-
-	//float mRadius;
-	//int mSectorCount, mStackCount;
 
 	std::vector<float> mVertexData;
 	std::vector<unsigned int> mIndices;
