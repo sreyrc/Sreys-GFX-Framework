@@ -81,8 +81,8 @@ int main() {
 
     srand(glfwGetTime());
 
-    pRenderer->AddSphere("PBR Sphere", new Sphere(pResourceManager, SphereType::PBR));
-    pRenderer->AddSphere("Light Sphere", new Sphere(pResourceManager, SphereType::LIGHT));
+    pRenderer->AddShape("PBR Shape", new Shape(pResourceManager, ShapeShading::PBR, "Cube"));
+    pRenderer->AddShape("Light Source", new Shape(pResourceManager, ShapeShading::LIGHT, "Sphere"));
 
     pRenderer->AddModel("Backpack", "../resources/objects/backpack/backpack.obj", pResourceManager);
     

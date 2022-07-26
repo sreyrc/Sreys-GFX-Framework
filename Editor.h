@@ -37,10 +37,13 @@ public:
 
 
 		// configure type map
-		mSphereTypeMap["Phong"] = SphereType::PHONG;
-		mSphereTypeMap["PBR"] = SphereType::PBR;
-		mSphereTypeMap["Glowy"] = SphereType::GLOWY;
-		mSphereTypeMap["Light"] = SphereType::LIGHT;
+		mShapeShadingMap["Phong"] = ShapeShading::PHONG;
+		mShapeShadingMap["PBR"] = ShapeShading::PBR;
+		mShapeShadingMap["Glowy"] = ShapeShading::GLOWY;
+		mShapeShadingMap["Light"] = ShapeShading::LIGHT;
+
+		mShapeGeometryList.push_back("Cube");
+		mShapeGeometryList.push_back("Sphere");
 	}
 
 	~Editor() {
@@ -55,22 +58,22 @@ public:
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		auto& sphereMap = pRenderer->GetSphereMap();
+		auto& shapeMap = pRenderer->GetShapeMap();
 		auto& textureMap = pResourceManager->GetTextureList();
 
 		// List of cubes in the scene
-		ImGui::Begin("Sphere List");
+		ImGui::Begin("Shape List");
 		{
-			if (ImGui::BeginListBox("##Spheres", ImVec2(200.0f, 100.0f)));
-			for (auto& [name, sphere] : sphereMap)
+			if (ImGui::BeginListBox("##Shapes", ImVec2(200.0f, 100.0f)));
+			for (auto& [name, shape] : shapeMap)
 			{
-				const bool is_selected = (mSelectedSphere == name);
+				const bool is_selected = (mSelectedShape == name);
 				if (ImGui::Selectable(name.c_str(), is_selected)) {
-					mSelectedSphere = name;
-					for (auto& [name, c] : sphereMap) {
+					mSelectedShape = name;
+					for (auto& [name, c] : shapeMap) {
 						c->mIsSelected = false;
 					}
-					sphere->mIsSelected = true;
+					shape->mIsSelected = true;
 				}
 
 				if (is_selected)
@@ -79,42 +82,55 @@ public:
 			ImGui::EndListBox();
 		}
 		if (ImGui::Button("+")) {
-			pRenderer->AddSphere("Sphere " + std::to_string(++mSphereCount), new Sphere(pResourceManager, SphereType::PHONG));
+			pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PHONG));
 		}
 		ImGui::End();
 
 		// Cube properties
-		ImGui::Begin("Sphere Properties");
+		ImGui::Begin("Shape Properties");
 		{
 
-			if (ImGui::BeginListBox("Type", ImVec2(200.0f, 100.0f)));
-			for (auto& [name, type] : mSphereTypeMap)
-			{
-				if (pRenderer->mDeferredShadingOn && (type == SphereType::GLOWY || type == SphereType::PHONG)) {
-					continue;
-				}
-				else {
-					const bool is_selected = (mSelectedSphereType == name);
-					if (ImGui::Selectable(name.c_str(), is_selected)) {
-						mSelectedSphereType = name;
-						sphereMap[mSelectedSphere]->mType = mSphereTypeMap[mSelectedSphereType];
+			if (ImGui::BeginListBox("Type", ImVec2(200.0f, 100.0f))) {
+				for (auto& [name, type] : mShapeShadingMap)
+				{
+					if (pRenderer->mDeferredShadingOn && (type == ShapeShading::GLOWY || type == ShapeShading::PHONG)) {
+						continue;
 					}
+					else {
+						const bool is_selected = (mSelectedShapeShading == name);
+						if (ImGui::Selectable(name.c_str(), is_selected)) {
+							mSelectedShapeShading = name;
+							shapeMap[mSelectedShape]->mShading = mShapeShadingMap[mSelectedShapeShading];
+						}
 
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+				}
+				ImGui::EndListBox();
+			}
+
+			if (ImGui::BeginListBox("Geometry", ImVec2(200.0f, 100.0f))) {
+				for (int i = 0; i < mShapeGeometryList.size(); i++) {
+					const bool is_selected = (mSelectedGeometry == i);
+					if (ImGui::Selectable(mShapeGeometryList[i].c_str(), is_selected)) {
+						mSelectedGeometry = i;
+						pRenderer->SetShapeGeometry(mShapeGeometryList[i], mSelectedShape);
+					}
 					if (is_selected)
 						ImGui::SetItemDefaultFocus();
 				}
+				ImGui::EndListBox();
 			}
-			ImGui::EndListBox();
 
-
-			if (sphereMap[mSelectedSphere]->mType == SphereType::PHONG) {
+			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PHONG) {
 				if (ImGui::BeginListBox("Textures", ImVec2(200.0f, 100.0f)));
 				for (auto& [name, tex] : textureMap)
 				{
 					const bool is_selected = (mSelectedTexture == name);
 					if (ImGui::Selectable(name.c_str(), is_selected)) {
 						mSelectedTexture = name;
-						pRenderer->SetTextureForSphere(pResourceManager->GetTexture(mSelectedTexture), mSelectedSphere);
+						pRenderer->SetTextureForSphere(pResourceManager->GetTexture(mSelectedTexture), mSelectedShape);
 					}
 
 					if (is_selected)
@@ -125,31 +141,31 @@ public:
 
 			ImGui::Text("Transform");
 
-			ImGui::SliderFloat3("Position", &(sphereMap[mSelectedSphere]->mTransform.get()->position.x), -2, 2);
-			ImGui::SliderFloat3("Scale", &(sphereMap[mSelectedSphere]->mTransform.get()->scale.x), -2, 2);
-			ImGui::SliderFloat3("Rotation", &(sphereMap[mSelectedSphere]->mTransform.get()->rotation.x), 0, 180);
+			ImGui::SliderFloat3("Position", &(shapeMap[mSelectedShape]->mTransform.get()->position.x), -2, 2);
+			ImGui::SliderFloat3("Scale", &(shapeMap[mSelectedShape]->mTransform.get()->scale.x), -2, 2);
+			ImGui::SliderFloat3("Rotation", &(shapeMap[mSelectedShape]->mTransform.get()->rotation.x), 0, 180);
 
-			if (sphereMap[mSelectedSphere]->mType == SphereType::PHONG) {
+			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PHONG) {
 				ImGui::Text("Material Properties");
 
-				ImGui::SliderFloat3("Ambient", &sphereMap[mSelectedSphere]->mMaterial.get()->ambient.r, 0, 10);
-				ImGui::ColorEdit3("Diffuse", &sphereMap[mSelectedSphere]->mMaterial.get()->diffuse.r);
-				ImGui::ColorEdit3("Specular", &sphereMap[mSelectedSphere]->mMaterial.get()->specular.r);
+				ImGui::SliderFloat3("Ambient", &shapeMap[mSelectedShape]->mMaterial.get()->ambient.r, 0, 10);
+				ImGui::ColorEdit3("Diffuse", &shapeMap[mSelectedShape]->mMaterial.get()->diffuse.r);
+				ImGui::ColorEdit3("Specular", &shapeMap[mSelectedShape]->mMaterial.get()->specular.r);
 
-				ImGui::SliderFloat("Shininess", &(sphereMap[mSelectedSphere]->mMaterial.get()->shininess), 0, 128);
+				ImGui::SliderFloat("Shininess", &(shapeMap[mSelectedShape]->mMaterial.get()->shininess), 0, 128);
 			}
 
-			else if (sphereMap[mSelectedSphere]->mType == SphereType::PBR) {
+			else if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
 				ImGui::Text("Material Properties");
 
-				ImGui::ColorEdit3("Albedo", &sphereMap[mSelectedSphere]->mMaterialPBR->albedo.r);
-				ImGui::SliderFloat("Metalness", &sphereMap[mSelectedSphere]->mMaterialPBR->metalness, 0, 1);
-				ImGui::SliderFloat("Roughness", &sphereMap[mSelectedSphere]->mMaterialPBR->roughness, 0, 1);
-				ImGui::SliderFloat("AO", &sphereMap[mSelectedSphere]->mMaterialPBR->ao, 0, 1);
+				ImGui::ColorEdit3("Albedo", &shapeMap[mSelectedShape]->mMaterialPBR->albedo.r);
+				ImGui::SliderFloat("Metalness", &shapeMap[mSelectedShape]->mMaterialPBR->metalness, 0, 1);
+				ImGui::SliderFloat("Roughness", &shapeMap[mSelectedShape]->mMaterialPBR->roughness, 0, 1);
+				ImGui::SliderFloat("AO", &shapeMap[mSelectedShape]->mMaterialPBR->ao, 0, 1);
 			}
 
 			else {
-				ImGui::SliderFloat3("Ambient", &sphereMap[mSelectedSphere]->mMaterial.get()->ambient.r, 0, 10);
+				ImGui::SliderFloat3("Ambient", &shapeMap[mSelectedShape]->mMaterial.get()->ambient.r, 0, 10);
 			}
 		}
 		
@@ -230,7 +246,10 @@ public:
 	}
 
 private:
-	std::unordered_map <std::string, SphereType> mSphereTypeMap;
-	std::string mSelectedTexture, mSelectedTrack, mSelectedSphere = "PBR Sphere", mSelectedSphereType = "Textured";
-	int mSphereCount = 1;
+	std::unordered_map <std::string, ShapeShading> mShapeShadingMap;
+	std::vector<std::string> mShapeGeometryList;
+	std::string mSelectedTexture, mSelectedTrack,
+		mSelectedShape = "PBR Shape", mSelectedShapeShading = "Textured";
+	int mSelectedGeometry = 0;
+	int mShapeCount = 1;
 };

@@ -5,7 +5,7 @@
 #include "ResourceManager.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
-#include "Sphere.h"
+#include "Shape.h"
 #include "Cubemap.h"
 #include "AudioPlayer.h"
 #include "Camera.h"
@@ -63,12 +63,12 @@ mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClea
 	mSphereShaders.push_back(new Shader("TexPhong.vert", "PBR.frag"));
 	mSphereShaders.push_back(new Shader("LightShader.vert", "LightShader.frag"));
 
-	mSphereShaders[static_cast<int>(SphereType::PHONG)]->Use();
-	mSphereShaders[static_cast<int>(SphereType::PHONG)]->SetInt("myTexture", 0);
+	mSphereShaders[static_cast<int>(ShapeShading::PHONG)]->Use();
+	mSphereShaders[static_cast<int>(ShapeShading::PHONG)]->SetInt("myTexture", 0);
 
-	mSphereShaders[static_cast<int>(SphereType::PHONG)]->SetFloat("constant", 1.0f);
-	mSphereShaders[static_cast<int>(SphereType::PHONG)]->SetFloat("linear", 0.35f);
-	mSphereShaders[static_cast<int>(SphereType::PHONG)]->SetFloat("quadratic", 0.44f);
+	mSphereShaders[static_cast<int>(ShapeShading::PHONG)]->SetFloat("constant", 1.0f);
+	mSphereShaders[static_cast<int>(ShapeShading::PHONG)]->SetFloat("linear", 0.35f);
+	mSphereShaders[static_cast<int>(ShapeShading::PHONG)]->SetFloat("quadratic", 0.44f);
 
 	mModelShader->SetFloat("constant", 1.0f);
 	mModelShader->SetFloat("linear", 0.35f);
@@ -128,7 +128,7 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 	glClearColor(mClearColor.r, mClearColor.y, mClearColor.z, 1.0f);
 
 	
-	// sphere drawing pass
+	// shape drawing pass
 	mProj = glm::perspective(glm::radians(pCamera->mZoom),
 		static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f);
 
@@ -146,10 +146,18 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 
 		// -------------- Load all geometry info of Phong-lit spheres into the FBO (multiple render targets) 
 		// Now only this: Load all geometry info of PBR-lit spheres into the FBO (multiple render targets) 
-		for (auto& [name, sphere] : mSphereDS) {
-			if (sphere->mType == SphereType::PBR) {
-				SetVertexShaderVarsForDeferredShadingAndUse(sphere, pCamera, pAudioPlayer);
-				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+		for (auto& [name, shape] : mShapeDS) {
+			if (shape->mShading == ShapeShading::PBR) {
+				if (shape->mShape == "Sphere") {
+					mSphereMesh->BindVAO();
+					SetVertexShaderVarsForDeferredShadingAndUse(shape, pCamera, pAudioPlayer);
+					glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				}
+				if (shape->mShape == "Cube") {
+					mCubeMesh->BindVAO();
+					SetVertexShaderVarsForDeferredShadingAndUse(shape, pCamera, pAudioPlayer);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
 			}
 		}
 
@@ -190,9 +198,9 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 
 		// render light spheres on top of scene
 		mSphereMesh->BindVAO();
-		for (auto& [name, sphere] : mSphereDS) {
-			if (sphere->mType == SphereType::LIGHT) {
-				SetShaderVarsAndUse(sphere, pCamera, pAudioPlayer);
+		for (auto& [name, shape] : mShapeDS) {
+			if (shape->mShading == ShapeShading::LIGHT) {
+				SetShaderVarsAndUse(shape, pCamera, pAudioPlayer);
 				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -212,21 +220,21 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		//}
 
 		mSphereMesh->BindVAO();
-		for (const auto& [name, sphere] : mSphereDS) {
-			// if sphere is selected - edit stencil buffer (for outlining)
-			if (sphere->mIsSelected) {
+		for (const auto& [name, shape] : mShapeDS) {
+			// if shape is selected - edit stencil buffer (for outlining)
+			if (shape->mIsSelected) {
 
 				glStencilFunc(GL_ALWAYS, 1, 0xFF);
 				glStencilMask(0xFF);
 
-				SetShaderVarsAndUse(sphere, pCamera, pAudioPlayer);
+				SetShaderVarsAndUse(shape, pCamera, pAudioPlayer);
 				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
 
 				glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 				glStencilMask(0x00);
 			}
 			else {
-				SetShaderVarsAndUse(sphere, pCamera, pAudioPlayer);
+				SetShaderVarsAndUse(shape, pCamera, pAudioPlayer);
 				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -238,12 +246,12 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		mOutlineShader->Use();
 		mOutlineShader->SetMat4("view", pCamera->GetViewMatrix());
 		mOutlineShader->SetMat4("proj", mProj);
-		mOutlineShader->SetFloat("outlining", mSelectedSphereThickness);
-		mOutlineShader->SetVec3("outlineColor", mSelectedSphereOutlineColor);
+		mOutlineShader->SetFloat("outlining", mSelectedShapeThickness);
+		mOutlineShader->SetVec3("outlineColor", mSelectedShapeOutlineColor);
 
-		for (auto& [name, sphere] : mSphereDS) {
-			if (sphere->mIsSelected) {
-				glm::mat4 model = CreateModelMatrix(sphere, pAudioPlayer);
+		for (auto& [name, shape] : mShapeDS) {
+			if (shape->mIsSelected) {
+				glm::mat4 model = CreateModelMatrix(shape, pAudioPlayer);
 				mOutlineShader->SetMat4("model", model);
 				glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
 			}
@@ -457,8 +465,8 @@ void Renderer::SetupForHDR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) {
 
 void Renderer::SetLightVarsInShader(Shader* shader) {
 	int i = 0;
-	for (auto& [name, cube] : mSphereDS) {
-		if (cube->mType == SphereType::LIGHT) {
+	for (auto& [name, cube] : mShapeDS) {
+		if (cube->mShading == ShapeShading::LIGHT) {
 			shader->SetVec3("lights[" + std::to_string(i) + "].position", cube->mTransform->position);
 			shader->SetVec3("lights[" + std::to_string(i) + "].color", cube->mMaterial->ambient);
 			i++;
@@ -467,10 +475,10 @@ void Renderer::SetLightVarsInShader(Shader* shader) {
 	shader->SetInt("numberOfLights", i);
 }
 
-void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
+void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
 	glm::mat4 model = CreateModelMatrix(pSphere, pAudioPlayer);
 
-	if (pSphere->mType == SphereType::PHONG) {
+	if (pSphere->mShading == ShapeShading::PHONG) {
 		mGBufferShader->Use();
 		mGBufferShader->SetMat4("model", model);
 		mGBufferShader->SetMat4("view", pCamera->GetViewMatrix());
@@ -496,20 +504,20 @@ void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Sphere* pSphere, Came
 	}
 }
 
-void Renderer::SetShaderVarsAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
+void Renderer::SetShaderVarsAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer) {
 
 	glm::mat4 model = CreateModelMatrix(pSphere, pAudioPlayer);
-	Shader* shader = mSphereShaders[static_cast<int>(pSphere->mType)];
+	Shader* shader = mSphereShaders[static_cast<int>(pSphere->mShading)];
 
 	shader->Use();
 	shader->SetMat4("model", model);
 	shader->SetMat4("view", pCamera->GetViewMatrix());
 	shader->SetMat4("proj", mProj);
 
-	if (pSphere->mType == SphereType::GLOWY) {
+	if (pSphere->mShading == ShapeShading::GLOWY) {
 		shader->SetFloat("time", static_cast<float>(glfwGetTime()));
 	}
-	else if (pSphere->mType == SphereType::PHONG) {
+	else if (pSphere->mShading == ShapeShading::PHONG) {
 		if (pSphere->mTexture) {
 			glActiveTexture(GL_TEXTURE0);
 			pSphere->mTexture->Bind();
@@ -521,7 +529,7 @@ void Renderer::SetShaderVarsAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer
 		shader->SetFloat("material.shininess", pSphere->mMaterial->shininess);
 		shader->SetVec3("viewPos", pCamera->mPosition);
 	}
-	else if (pSphere->mType == SphereType::PBR) {
+	else if (pSphere->mShading == ShapeShading::PBR) {
 		if (pSphere->mTexture) {
 			glActiveTexture(GL_TEXTURE0);
 			pSphere->mTexture->Bind();
@@ -532,38 +540,42 @@ void Renderer::SetShaderVarsAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer
 		shader->SetFloat("roughness", pSphere->mMaterialPBR->roughness);
 		shader->SetFloat("ao", pSphere->mMaterialPBR->ao);
 	}
-	else if (pSphere->mType == SphereType::LIGHT) {
+	else if (pSphere->mShading == ShapeShading::LIGHT) {
 		shader->SetVec3("lightColor", pSphere->mMaterial->ambient);
 	}
 }
 
-glm::mat4 Renderer::CreateModelMatrix(Sphere* pSphere, AudioPlayer* pAudioPlayer) {
+glm::mat4 Renderer::CreateModelMatrix(Shape* pShape, AudioPlayer* pAudioPlayer) {
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, pSphere->mTransform->position);
-	model = glm::scale(model, glm::vec3(pSphere->mTransform->scale) + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 100000));
-	model = glm::rotate(model, glm::radians(pSphere->mTransform->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(pSphere->mTransform->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(pSphere->mTransform->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::translate(model, pShape->mTransform->position);
+	model = glm::scale(model, glm::vec3(pShape->mTransform->scale) + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 100000));
+	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(pShape->mTransform->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	return model;
 }
 
-void Renderer::AddSphere(std::string name, Sphere* pSphere) {
-	mSphereDS[name] = pSphere;
+void Renderer::AddShape(std::string name, Shape* pShape) {
+	mShapeDS[name] = pShape;
 }
 
 void Renderer::AddModel(std::string name, std::string path, ResourceManager* pResourceManager) {
 	mModelDS[name] = new Model(path, pResourceManager);
 }
 
-std::unordered_map<std::string, Sphere*>& Renderer::GetSphereMap() {
-	return mSphereDS;
+std::unordered_map<std::string, Shape*>& Renderer::GetShapeMap() {
+	return mShapeDS;
 }
 
 void Renderer::SetTextureForSphere(Texture* texture, std::string name) {
-	mSphereDS[name]->mTexture = texture;
+	mShapeDS[name]->mTexture = texture;
 }
 
-std::vector<Shader*> Renderer::SphereShaderList() {
+void Renderer::SetShapeGeometry(std::string shape, std::string name) {
+	mShapeDS[name]->mShape = shape;
+}
+
+std::vector<Shader*> Renderer::ShapeShaderList() {
 	return mSphereShaders;
 }
 

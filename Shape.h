@@ -13,7 +13,7 @@
 #include "AudioPlayer.h"
 #include "ResourceManager.h"
 
-enum class SphereType {
+enum class ShapeShading {
 	GLOWY,
 	PHONG,
 	PBR,
@@ -50,17 +50,19 @@ struct Transform {
 		: position(_position), scale(_scale), rotation(_rotation){}
 };
 
-class Sphere
+class Shape
 {
 public:
-	Sphere(ResourceManager* pResourceManager, SphereType type) {
+	Shape(ResourceManager* pResourceManager, ShapeShading shading, std::string shape = "Cube") {
+		
 		mTransform = std::make_unique<Transform>(glm::vec3(rand() % 1, rand() % 1, rand() % 1), glm::vec3(0.5), glm::vec3(30));
 		mMaterial = std::make_unique<Material>(glm::vec3(0.2f), glm::vec3(0.5f), glm::vec3(0.5f), 32.0f);
 		mMaterialPBR = std::make_unique<MaterialPBR>(glm::vec3(0.2f), 0.5f, 0.5f, 0.5f);
+		mShape = shape;
 
-		mType = type;
+		mShading = shading;
 
-		if (type == SphereType::LIGHT) {
+		if (shading == ShapeShading::LIGHT) {
 			mTransform->scale = glm::vec3(0.02f);
 			mMaterial->ambient = glm::vec3(1.0f); 
 		}
@@ -68,15 +70,16 @@ public:
 		mTexture = pResourceManager->GetTexture("Jimin");
 	}
 
-	~Sphere() {}
+	~Shape() {}
 
 	Texture* mTexture;
 	std::unique_ptr<Transform>(mTransform);
 	std::unique_ptr<Material>(mMaterial);
 	std::unique_ptr<MaterialPBR>(mMaterialPBR);
 
-	SphereType mType;
+	ShapeShading mShading;
 	std::string mName;
+	std::string mShape;
 
 	bool mIsSelected = false;
 };

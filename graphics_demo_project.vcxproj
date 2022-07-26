@@ -163,7 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioPlayer.h" />
-    <ClInclude Include="Sphere.h" />
+    <ClInclude Include="Shape.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="CubeMesh.h" />
     <ClInclude Include="Editor.h" />

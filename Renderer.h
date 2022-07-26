@@ -3,7 +3,7 @@
 #include "ResourceManager.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
-#include "Sphere.h"
+#include "Shape.h"
 #include "Cubemap.h"
 #include "AudioPlayer.h"
 #include "Camera.h"
@@ -42,17 +42,18 @@ private:
 	void SetupFBO(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetupForHDR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetLightVarsInShader(Shader* shader);
-	void SetVertexShaderVarsForDeferredShadingAndUse(Sphere* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
-	void SetShaderVarsAndUse(Sphere* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer);
-	glm::mat4 CreateModelMatrix(Sphere* pSphere, AudioPlayer* pAudioPlayer);
+	void SetVertexShaderVarsForDeferredShadingAndUse(Shape* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	void SetShaderVarsAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	glm::mat4 CreateModelMatrix(Shape* pSphere, AudioPlayer* pAudioPlayer);
 	
 public:
-	void AddSphere(std::string name, Sphere* pSphere);
+	void AddShape(std::string name, Shape* pSphere);
 	void AddModel(std::string name, std::string path, ResourceManager* pResourceManager);
-	std::unordered_map<std::string, Sphere*>& GetSphereMap();
+	std::unordered_map<std::string, Shape*>& GetShapeMap();
 	
 	void SetTextureForSphere(Texture* texture, std::string name);
-	std::vector<Shader*> SphereShaderList();
+	void SetShapeGeometry(std::string shape, std::string name);
+	std::vector<Shader*> ShapeShaderList();
 	std::vector<GLuint>* GetDefShadingGBufferTextures();
 
 public:
@@ -75,12 +76,12 @@ public:
 
 private:
 	// outline properties
-	glm::vec3 mSelectedSphereOutlineColor = glm::vec3(10.0f, 10.0f, 0.0f);
+	glm::vec3 mSelectedShapeOutlineColor = glm::vec3(10.0f, 10.0f, 0.0f);
 
-	float mSelectedSphereThickness = 0.03f;
+	float mSelectedShapeThickness = 0.03f;
 
 	// cube storage
-	std::unordered_map<std::string, Sphere*> mSphereDS;
+	std::unordered_map<std::string, Shape*> mShapeDS;
 
 	// Model Storage
 	std::unordered_map<std::string, Model*> mModelDS;
