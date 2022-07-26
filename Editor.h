@@ -44,6 +44,7 @@ public:
 
 		mShapeGeometryList.push_back("Cube");
 		mShapeGeometryList.push_back("Sphere");
+		mShapeGeometryList.push_back("Quad");
 	}
 
 	~Editor() {
