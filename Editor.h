@@ -61,6 +61,7 @@ public:
 
 		auto& shapeMap = pRenderer->GetShapeMap();
 		auto& textureMap = pResourceManager->GetTextureList();
+		auto& texturePackMap = pResourceManager->GetTexturePackList();
 
 		// List of cubes in the scene
 		ImGui::Begin("Shape List");
@@ -88,9 +89,7 @@ public:
 		ImGui::End();
 
 		// Cube properties
-		ImGui::Begin("Shape Properties");
-		{
-
+		ImGui::Begin("Shape Properties"); {
 			if (ImGui::BeginListBox("Type", ImVec2(200.0f, 100.0f))) {
 				for (auto& [name, type] : mShapeShadingMap)
 				{
@@ -101,6 +100,9 @@ public:
 						const bool is_selected = (mSelectedShapeShading == name);
 						if (ImGui::Selectable(name.c_str(), is_selected)) {
 							mSelectedShapeShading = name;
+							if (mSelectedShapeShading == "Light") {
+								shapeMap[mSelectedShape]->mTransform->scale = glm::vec3(0.02f, 0.02f, 0.02f);
+							}
 							shapeMap[mSelectedShape]->mShading = mShapeShadingMap[mSelectedShapeShading];
 						}
 
@@ -124,27 +126,34 @@ public:
 				ImGui::EndListBox();
 			}
 
-			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PHONG) {
-				if (ImGui::BeginListBox("Textures", ImVec2(200.0f, 100.0f)));
-				for (auto& [name, tex] : textureMap)
-				{
-					const bool is_selected = (mSelectedTexture == name);
-					if (ImGui::Selectable(name.c_str(), is_selected)) {
-						mSelectedTexture = name;
-						pRenderer->SetTextureForSphere(pResourceManager->GetTexture(mSelectedTexture), mSelectedShape);
-					}
+			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
+				if (ImGui::BeginListBox("Texture Packs", ImVec2(200.0f, 100.0f))); {
+					for (auto& [name, texPack] : texturePackMap)
+					{
+						if (name == "") {
+							continue;
+						}
+						const bool is_selected = (mSelectedTexturePack == name);
+						if (ImGui::Selectable(name.c_str(), is_selected)) {
+							mSelectedTexturePack = name;
+							pRenderer->SetTexturePackForShape(pResourceManager->GetTexturePack(mSelectedTexturePack), mSelectedShape);
+						}
 
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndListBox();
 				}
-				ImGui::EndListBox();
 			}
 
 			ImGui::Text("Transform");
 
 			ImGui::SliderFloat3("Position", &(shapeMap[mSelectedShape]->mTransform.get()->position.x), -2, 2);
-			ImGui::SliderFloat3("Scale", &(shapeMap[mSelectedShape]->mTransform.get()->scale.x), -2, 2);
-			ImGui::SliderFloat3("Rotation", &(shapeMap[mSelectedShape]->mTransform.get()->rotation.x), 0, 180);
+
+			if (!(shapeMap[mSelectedShape]->mShading == ShapeShading::LIGHT)) {
+				ImGui::SliderFloat3("Scale", &(shapeMap[mSelectedShape]->mTransform.get()->scale.x), -2, 2);
+				ImGui::SliderFloat3("Rotation", &(shapeMap[mSelectedShape]->mTransform.get()->rotation.x), 0, 180);
+			}			
 
 			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PHONG) {
 				ImGui::Text("Material Properties");
@@ -167,6 +176,11 @@ public:
 
 			else {
 				ImGui::SliderFloat3("Ambient", &shapeMap[mSelectedShape]->mMaterial.get()->ambient.r, 0, 10);
+			}
+
+			if (ImGui::Button("Remove") && mShapeCount > 1) {
+				pRenderer->RemoveShape(mSelectedShape); mShapeCount--;
+				mSelectedShape = (shapeMap.begin())->first;
 			}
 		}
 		
@@ -234,7 +248,7 @@ public:
 			ImGui::Begin("G-Buffers (Def. Shading)"); {
 				int vecSize = pRenderer->mGBufferTextures.size();
 				for (int i = 0; i < vecSize; i++) {
-					ImGui::Image((ImTextureID)pRenderer->mGBufferTextures[i], ImVec2(192, 108), ImVec2(0, 1), ImVec2(1, 0));
+					ImGui::Image((ImTextureID)pRenderer->mGBufferTextures[i], ImVec2(384, 216), ImVec2(0, 1), ImVec2(1, 0));
 				}
 			}
 			ImGui::End();
@@ -249,8 +263,8 @@ public:
 private:
 	std::unordered_map <std::string, ShapeShading> mShapeShadingMap;
 	std::vector<std::string> mShapeGeometryList;
-	std::string mSelectedTexture, mSelectedTrack,
+	std::string mSelectedTexturePack = "Stylized_Fur", mSelectedTrack,
 		mSelectedShape = "PBR Shape", mSelectedShapeShading = "Textured";
 	int mSelectedGeometry = 0;
-	int mShapeCount = 1;
+	int mShapeCount = 2;
 };

@@ -8,6 +8,7 @@ class Texture {
 public:
     Texture(std::string path, std::string& type);
     void Bind();
+    void Unbind();
 
     std::string GetType();
     std::string GetPath();

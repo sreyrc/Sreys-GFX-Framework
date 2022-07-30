@@ -36,9 +36,12 @@ struct MaterialPBR {
 	float metalness;
 	float roughness;
 	float ao;
+	TexturePack* texturePack;
+	bool texturePackEnabled;
 
 	MaterialPBR(glm::vec3 _albedo, float _metalness, float _roughness, float _ao)
 		: albedo(_albedo), metalness(_metalness), roughness(_roughness), ao(_ao) {}
+		//texturePack(_texturePack), texturePackEnabled(_enabled) {}
 };
 
 struct Transform {
@@ -67,7 +70,9 @@ public:
 			mMaterial->ambient = glm::vec3(1.0f); 
 		}
 
-		mTexture = pResourceManager->GetTexture("Jimin");
+		mTexture = pResourceManager->GetTexture("Gravel");
+		mMaterialPBR->texturePack = pResourceManager->GetTexturePack("Stylized_Fur");
+		//mMaterialPBR->texturePackEnabled = true;
 	}
 
 	~Shape() {}

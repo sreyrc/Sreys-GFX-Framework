@@ -60,7 +60,7 @@ int main() {
 
     pAudioHandler->Init();
 
-    std::vector<std::string> faces {
+    std::vector<std::string> skyFaces {
         "../resources/skybox/right.jpg",
         "../resources/skybox/left.jpg",
         "../resources/skybox/top.jpg",
@@ -69,10 +69,7 @@ int main() {
         "../resources/skybox/back.jpg",
     };
 
-    pResourceManager->AddCubeMap("Default", faces);
-    pResourceManager->AddTexture("Himesh", "../resources/Himesh.jpg");
-    pResourceManager->AddTexture("Container", "../resources/container.jpg");
-    pResourceManager->AddTexture("Jimin", "../resources/Jimin.png");
+    pResourceManager->AddCubeMap("Default", skyFaces);
 
     Renderer* pRenderer = new Renderer(SCREEN_WIDTH, SCREEN_HEIGHT, pResourceManager->GetCubeMap("Default"));
     Editor* pEditor = new Editor(window);
@@ -81,7 +78,7 @@ int main() {
 
     srand(glfwGetTime());
 
-    pRenderer->AddShape("PBR Shape", new Shape(pResourceManager, ShapeShading::PBR, "Cube"));
+    pRenderer->AddShape("PBR Shape", new Shape(pResourceManager, ShapeShading::PBR, "Sphere"));
     pRenderer->AddShape("Light Source", new Shape(pResourceManager, ShapeShading::LIGHT, "Sphere"));
 
     pRenderer->AddModel("Backpack", "../resources/objects/backpack/backpack.obj", pResourceManager);

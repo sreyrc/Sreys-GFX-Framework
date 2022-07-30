@@ -49,10 +49,11 @@ private:
 	
 public:
 	void AddShape(std::string name, Shape* pSphere);
+	void RemoveShape(std::string name);
 	void AddModel(std::string name, std::string path, ResourceManager* pResourceManager);
 	std::unordered_map<std::string, Shape*>& GetShapeMap();
 	
-	void SetTextureForSphere(Texture* texture, std::string name);
+	void SetTexturePackForShape(TexturePack* texturePack, std::string name);
 	void SetShapeGeometry(std::string shape, std::string name);
 	std::vector<Shader*> ShapeShaderList();
 	std::vector<GLuint>* GetDefShadingGBufferTextures();

@@ -22,9 +22,9 @@ Texture::Texture(std::string path, std::string& type) {
     {
         GLenum format{};
         switch (nrComponents) {
-        case 1: format = GL_RED; break;
-        case 3: format = GL_RGB; break;
-        case 4: format = GL_RGBA; break;
+            case 1: format = GL_RED; break;
+            case 3: format = GL_RGB; break;
+            case 4: format = GL_RGBA; break;
         }
 
         glBindTexture(GL_TEXTURE_2D, mID);
@@ -48,6 +48,10 @@ Texture::Texture(std::string path, std::string& type) {
 
 void Texture::Bind() {
     glBindTexture(GL_TEXTURE_2D, mID);
+}
+
+void Texture::Unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 std::string Texture::GetType() {

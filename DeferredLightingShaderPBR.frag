@@ -23,8 +23,6 @@ uniform int numberOfLights;
 
 uniform vec3 viewPos;
 
-//uniform sampler2D myTexture;
-
 const float PI = 3.14159265359;
 
 float NDFGGX(vec3 N, vec3 H, float alpha) {
