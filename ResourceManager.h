@@ -58,14 +58,6 @@ public:
 			mTextures[name] = new Texture(path, type);
 			return mTextures[name];
 		}
-
-		//if (path != "") {
-		//	mTextures[name] = new Texture(path, type);
-		//	return mTextures[name];
-		//}
-		//else {
-		//	return nullptr;
-		//}
 	}
 
 	TexturePack* AddTexturePack(std::string name, std::vector<std::string>& paths) {		

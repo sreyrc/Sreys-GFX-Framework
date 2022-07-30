@@ -126,23 +126,27 @@ public:
 				ImGui::EndListBox();
 			}
 
-			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
-				if (ImGui::BeginListBox("Texture Packs", ImVec2(200.0f, 100.0f))); {
-					for (auto& [name, texPack] : texturePackMap)
-					{
-						if (name == "") {
-							continue;
-						}
-						const bool is_selected = (mSelectedTexturePack == name);
-						if (ImGui::Selectable(name.c_str(), is_selected)) {
-							mSelectedTexturePack = name;
-							pRenderer->SetTexturePackForShape(pResourceManager->GetTexturePack(mSelectedTexturePack), mSelectedShape);
-						}
+			ImGui::Checkbox("Enable Tex Pack", &shapeMap[mSelectedShape]->mMaterialPBR->texturePackEnabled);
 
-						if (is_selected)
-							ImGui::SetItemDefaultFocus();
+			if (shapeMap[mSelectedShape]->mMaterialPBR->texturePackEnabled) {
+				if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
+					if (ImGui::BeginListBox("Texture Packs", ImVec2(200.0f, 100.0f))); {
+						for (auto& [name, texPack] : texturePackMap)
+						{
+							if (name == "") {
+								continue;
+							}
+							const bool is_selected = (mSelectedTexturePack == name);
+							if (ImGui::Selectable(name.c_str(), is_selected)) {
+								mSelectedTexturePack = name;
+								pRenderer->SetTexturePackForShape(pResourceManager->GetTexturePack(mSelectedTexturePack), mSelectedShape);
+							}
+
+							if (is_selected)
+								ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndListBox();
 					}
-					ImGui::EndListBox();
 				}
 			}
 

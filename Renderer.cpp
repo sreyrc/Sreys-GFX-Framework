@@ -382,29 +382,11 @@ void Renderer::SetupForDeferredShading(int SCREEN_WIDTH, int SCREEN_HEIGHT) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, mGBufferTextures[3], 0);
 
-	// bitangent buffer
-	//glGenTextures(1, &mGBufferTextures[4]);
-	//glBindTexture(GL_TEXTURE_2D, mGBufferTextures[4]);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, mGBufferTextures[4], 0);
-
-	//// tangent buffer
-	//glGenTextures(1, &mGBufferTextures[5]);
-	//glBindTexture(GL_TEXTURE_2D, mGBufferTextures[5]);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, mGBufferTextures[5], 0);
-
 	// tell OpenGL which color attachments we’ll use (of this framebuffer)
 	mAttachments[0] = GL_COLOR_ATTACHMENT0;
 	mAttachments[1] = GL_COLOR_ATTACHMENT1;
 	mAttachments[2] = GL_COLOR_ATTACHMENT2;
 	mAttachments[3] = GL_COLOR_ATTACHMENT3;
-	//mAttachments[4] = GL_COLOR_ATTACHMENT4;
-	//mAttachments[5] = GL_COLOR_ATTACHMENT5;
 	glDrawBuffers(4, mAttachments);
 
 	glGenRenderbuffers(1, &mGRBODepth);
@@ -482,34 +464,6 @@ void Renderer::SetLightVarsInShader(Shader* shader) {
 
 void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* pAudioPlayer) {
 
-	//if (pShape->mShading == ShapeShading::PHONG) {
-	//	mGBufferShader->Use();
-	//	mGBufferShader->SetMat4("model", model);
-	//	mGBufferShader->SetMat4("view", pCamera->GetViewMatrix());
-	//	mGBufferShader->SetMat4("proj", mProj);
-
-	//	if (pShape->mTexture) {
-	//		glActiveTexture(GL_TEXTURE0);
-	//		pShape->mTexture->Bind();
-	//	}
-	//	mGBufferShader->SetVec3("diffuse", pShape->mMaterial->diffuse);
-	//	mGBufferShader->SetVec3("specular", pShape->mMaterial->specular);
-	//}
-	//if (pShape->mShading == ShapeShading::PBR) {
-	//	glm::mat4 model = CreateModelMatrix(pShape, pAudioPlayer);
-	//	mGBufferShaderPBR->Use();
-	//	mGBufferShaderPBR->SetMat4("model", model);
-	//	mGBufferShaderPBR->SetMat4("view", pCamera->GetViewMatrix());
-	//	mGBufferShaderPBR->SetMat4("proj", mProj);
-
-	//	mGBufferShaderPBR->SetVec3("albedo", pShape->mMaterialPBR->albedo);
-	//	mGBufferShaderPBR->SetFloat("roughness", pShape->mMaterialPBR->roughness);
-	//	mGBufferShaderPBR->SetFloat("metalness", pShape->mMaterialPBR->metalness);
-	//	mGBufferShaderPBR->SetFloat("ao", pShape->mMaterialPBR->ao);
-
-	//	glActiveTexture(GL_TEXTURE0);
-	//	pShape->mTexture->Bind();
-	//}
 	if (pShape->mShading == ShapeShading::PBR) {
 		glm::mat4 model = CreateModelMatrix(pShape, pAudioPlayer);
 		mGBufferShaderPBR->Use();
@@ -546,15 +500,16 @@ void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pShape, Camera
 			if (pShape->mMaterialPBR->texturePack->aoMap) {
 				pShape->mMaterialPBR->texturePack->aoMap->Bind();
 			}
-
-			mGBufferShaderPBR->SetInt("packEnabled", pShape->mMaterialPBR->texturePackEnabled);
 		}
 		else {
 			mGBufferShaderPBR->SetVec3("albedo", pShape->mMaterialPBR->albedo);
 			mGBufferShaderPBR->SetFloat("roughness", pShape->mMaterialPBR->roughness);
 			mGBufferShaderPBR->SetFloat("metalness", pShape->mMaterialPBR->metalness);
 			mGBufferShaderPBR->SetFloat("ao", pShape->mMaterialPBR->ao);
+
+			
 		}
+		mGBufferShaderPBR->SetInt("packEnabled", pShape->mMaterialPBR->texturePackEnabled);
 	}
 }
 
@@ -635,7 +590,6 @@ glm::mat4 Renderer::CreateModelMatrix(Shape* pShape, AudioPlayer* pAudioPlayer) 
 	glm::vec3 y = glm::vec3(0.0f, 1.0f, 0.0f) * glm::radians(pShape->mTransform->rotation.y);
 	glm::vec3 z = glm::vec3(0.0f, 0.0f, 1.0f) * glm::radians(pShape->mTransform->rotation.z);
 	glm::vec3 r = x + y + z;
-	//glm::mat4 m;
 	model = glm::rotate(model, glm::length(r), glm::normalize(r));
 
 	return model;

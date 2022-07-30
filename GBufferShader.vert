@@ -18,9 +18,10 @@ uniform mat4 proj;
 void main() {
 	gl_Position = proj * view * model * vec4(aPos, 1.0);
 	TexCoords = aTexCoords;
+	Normal = transpose(inverse(mat3(model))) * aNormal;
 	FragPos = vec3(model * vec4(aPos, 1.0f));
 	vec3 T = normalize(transpose(inverse(mat3(model))) * aTangent);
 	vec3 B = normalize(transpose(inverse(mat3(model))) * aBitangent);
-	vec3 N = normalize(transpose(inverse(mat3(model))) * aNormal);
+	vec3 N = normalize(Normal);
 	TBN = mat3(T, B, N);
 }

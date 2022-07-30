@@ -28,7 +28,6 @@ uniform bool metallicMapOn;
 
 void main() {
 	gPosition = vec4(FragPos, 1.0f);
-	//gNormal = vec4(normalize(Normal), 1.0);
 
 	if (packEnabled) {
 		vec3 normal = texture(normalMap, TexCoords).rgb;
