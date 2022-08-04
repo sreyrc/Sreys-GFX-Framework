@@ -223,5 +223,14 @@
     <None Include="GBufferShaderPBR.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="PointShadowDepth.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PointShadowDepth.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PointShadowDepth.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

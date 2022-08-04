@@ -201,6 +201,9 @@
     <None Include="Outlining.frag" />
     <None Include="Outlining.vert" />
     <None Include="PBR.frag" />
+    <None Include="PointShadowDepth.frag" />
+    <None Include="PointShadowDepth.geom" />
+    <None Include="PointShadowDepth.vert" />
     <None Include="ScreenShader.frag" />
     <None Include="ScreenShader.vert" />
     <None Include="Shader.frag" />

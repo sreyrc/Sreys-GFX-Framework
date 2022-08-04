@@ -37,7 +37,7 @@ int main() {
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Cubes", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "MORBSUS GFX Engine", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -76,7 +76,7 @@ int main() {
 
     Camera* pCamera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
-    srand(glfwGetTime());
+    srand(time(NULL));
 
     pRenderer->AddShape("PBR Shape", new Shape(pResourceManager, ShapeShading::PBR, "Sphere"));
     pRenderer->AddShape("Light Source", new Shape(pResourceManager, ShapeShading::LIGHT, "Sphere"));
