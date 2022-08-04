@@ -12,10 +12,13 @@ struct TexturePack {
 	Texture* normalMap;
 	Texture* roughnessMap;
 	Texture* metallicMap;
+	Texture* depthMap;
 	Texture* aoMap;
 
-	TexturePack(Texture* _albedoMap, Texture* _normalMap, Texture* _roughnessMap, Texture* _metallicMap, Texture* _aoMap)
-		: albedoMap(_albedoMap), normalMap(_normalMap), roughnessMap(_roughnessMap), metallicMap(_metallicMap), aoMap(_aoMap) {}
+	TexturePack(Texture* _albedoMap, Texture* _normalMap, Texture* _roughnessMap, 
+		Texture* _metallicMap, Texture* _depthMap, Texture* _aoMap)
+		: albedoMap(_albedoMap), normalMap(_normalMap), roughnessMap(_roughnessMap), 
+		metallicMap(_metallicMap), depthMap(_depthMap), aoMap(_aoMap) {}
 };
 
 class ResourceManager {
@@ -36,13 +39,14 @@ public:
 			std::string texPackName;
 			std::getline(input, texPackName, '\n');
 
-			std::vector<std::string> paths(5);
+			std::vector<std::string> paths(6);
 			std::string basePathName = "../resources/texture_packs/" + texPackName + "/" + texPackName;
 			paths[0] = basePathName + "_BaseColor.jpg";
 			paths[1] = basePathName + "_Normal.jpg";
 			paths[2] = basePathName + "_Roughness.jpg";
 			paths[3] = basePathName + "_Metallic.jpg";
-			paths[4] = basePathName + "_AO.jpg";
+			paths[4] = basePathName + "_Height.png";
+			paths[5] = basePathName + "_AO.jpg";
 
 			AddTexturePack(texPackName, paths);
 		}
@@ -66,7 +70,8 @@ public:
 			AddTexture(name + "_Normal", paths[1]),
 			AddTexture(name + "_Roughness", paths[2]),
 			AddTexture(name + "_Metallness", paths[3]),
-			AddTexture(name + "_AO", paths[4]));
+			AddTexture(name + "_Depth", paths[4]),
+			AddTexture(name + "_AO", paths[5]));
 
 		return mTexturePacks[name];
 	}

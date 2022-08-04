@@ -95,7 +95,7 @@ private:
 
 	// Shaders
 	Shader* mScreenShader, *mSkyboxShader, *mOutlineShader, *mLightBlockShader, *mGBufferShader, *mGBufferShaderPBR,
-		*mDeferredShadingLightingShader, *mDeferredShadingLightingShaderPBR, *mHDRShader, *mModelShader;
+		*mDeferredShadingLightingShader, *mDeferredShadingLightingShaderPBR, *mHDRShader, *mModelShader, *mPointShadowDepthShader;
 	
 	// Proj matrix is common for all
 	glm::mat4 mProj;
@@ -113,10 +113,13 @@ private:
 
 	// G-Buffer framebuffer, color textures for different properties and a depth buffer
 	//GLuint mGBuffer, mGPosition, mGNormal, mGDiffuseColor, mGSpecularColor, mAttachments[4], mGRBODepth;
-
 	
-	// depth framebuffer for shadow-mapping
-	GLuint mShadowFBO, mShadowDepthMap;
+	// transformation matrices for shadowmaps
+	std::vector<glm::mat4> mShadowTransforms;
+	glm::mat4 mShadowProj;
+
+	// FBO for shadow maps
+	GLuint mShadowDepthMapFBO, mShadowDepthCubeMap;
 
 	// Shaders that cubes can use. Each cube can decide which one to use
 	std::vector<Shader*> mSphereShaders;

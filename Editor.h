@@ -86,6 +86,13 @@ public:
 		if (ImGui::Button("+")) {
 			pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PBR));
 		}
+
+		if (ImGui::Button("Add 10")) {
+			for (int i = 0; i < 10; i++) {
+				pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PBR));
+			}
+		}
+
 		ImGui::End();
 
 		// Cube properties
@@ -102,6 +109,9 @@ public:
 							mSelectedShapeShading = name;
 							if (mSelectedShapeShading == "Light") {
 								shapeMap[mSelectedShape]->mTransform->scale = glm::vec3(0.02f, 0.02f, 0.02f);
+							}
+							else {
+								shapeMap[mSelectedShape]->mTransform->scale = glm::vec3(0.5f, 0.5f, 0.5f);
 							}
 							shapeMap[mSelectedShape]->mShading = mShapeShadingMap[mSelectedShapeShading];
 						}

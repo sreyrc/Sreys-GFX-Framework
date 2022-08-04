@@ -11,7 +11,7 @@
 class Shader
 {
 public:
-	Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
+	Shader(const char* vertexShaderPath, const char* fragmentShaderPath, const char* geometryShaderPath = nullptr);
 	void Use();
 
 	void SetVec3(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2);

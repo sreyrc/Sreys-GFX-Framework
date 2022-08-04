@@ -58,7 +58,6 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 void main() {
 	vec3 N = normalize(Normal);
 	vec3 V = normalize(viewPos - FragPos);
-//	vec3 H = normalize(N + L);
 	vec3 F0 = vec3(0.4);
 	F0 = mix(F0, albedo, metalness);
 

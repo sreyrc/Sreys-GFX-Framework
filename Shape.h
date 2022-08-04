@@ -56,9 +56,9 @@ struct Transform {
 class Shape
 {
 public:
-	Shape(ResourceManager* pResourceManager, ShapeShading shading, std::string shape = "Cube") {
+	Shape(ResourceManager* pResourceManager, ShapeShading shading, std::string shape = "Sphere") {
 		
-		mTransform = std::make_unique<Transform>(glm::vec3(rand() % 1, rand() % 1, rand() % 1), glm::vec3(0.5), glm::vec3(30));
+		mTransform = std::make_unique<Transform>(glm::vec3(rand()/(float)RAND_MAX, rand()/(float)RAND_MAX, rand()/(float)RAND_MAX), glm::vec3(0.5), glm::vec3(30));
 		mMaterial = std::make_unique<Material>(glm::vec3(0.2f), glm::vec3(0.5f), glm::vec3(0.5f), 32.0f);
 		mMaterialPBR = std::make_unique<MaterialPBR>(glm::vec3(0.2f), 0.5f, 0.5f, 0.5f);
 		mShape = shape;
@@ -70,14 +70,14 @@ public:
 			mMaterial->ambient = glm::vec3(1.0f); 
 		}
 
-		mTexture = pResourceManager->GetTexture("Gravel");
+		//mTexture = pResourceManager->GetTexture("Gravel");
 		mMaterialPBR->texturePack = pResourceManager->GetTexturePack("Stylized_Fur");
 		//mMaterialPBR->texturePackEnabled = true;
 	}
 
 	~Shape() {}
 
-	Texture* mTexture;
+	//Texture* mTexture;
 	std::unique_ptr<Transform>(mTransform);
 	std::unique_ptr<Material>(mMaterial);
 	std::unique_ptr<MaterialPBR>(mMaterialPBR);

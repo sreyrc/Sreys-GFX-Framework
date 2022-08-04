@@ -58,7 +58,9 @@ Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cu
 	mHDRShader(new Shader("HDR.vert", "HDR.frag")),
 	mSkyboxShader(new Shader("Skybox.vert", "Skybox.frag")),
 	mModelShader(new Shader("TexPhongModel.vert", "TexPhongModel.frag")),
-	mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClearColor(glm::vec3(0)), mGBufferTextures(4)
+	mPointShadowDepthShader(new Shader("PointShadowDepth.vert", "PointShadowDepth.frag", "PointShadowDepth.geom")),
+	mSkyboxOn(true), mDeferredShadingOn(true), mHDROn(false), mExposure(1.0f), mClearColor(glm::vec3(0)), mGBufferTextures(4),
+	mShadowTransforms(6), mShadowProj(glm::perspective(glm::radians(90.0f), (float)1024.0/1024.0f, 1.0f, 25.0f))
 {
 	mSphereShaders.push_back(new Shader("Shader.vert", "Shader.frag"));
 	mSphereShaders.push_back(new Shader("TexPhong.vert", "TexPhong.frag"));
@@ -86,7 +88,9 @@ Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cu
 	mGBufferShaderPBR->SetInt("albedoMap", 0);
 	mGBufferShaderPBR->SetInt("normalMap", 1);
 	mGBufferShaderPBR->SetInt("roughnessMap", 2);
-	mGBufferShaderPBR->SetInt("aoMap", 3);
+	mGBufferShaderPBR->SetInt("metallicMap", 3);
+	mGBufferShaderPBR->SetInt("depthMap", 4);
+	mGBufferShaderPBR->SetInt("aoMap", 5);
 
 	mDeferredShadingLightingShader->Use();
 	mDeferredShadingLightingShader->SetInt("gPosition", 0);
@@ -99,6 +103,7 @@ Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cu
 	mDeferredShadingLightingShaderPBR->SetInt("gNormal", 1);
 	mDeferredShadingLightingShaderPBR->SetInt("gAlbedo", 2);
 	mDeferredShadingLightingShaderPBR->SetInt("gRoughMetalAO", 3);
+	mDeferredShadingLightingShaderPBR->SetInt("shadowDepthCubeMap", 4);
 
 	mScreenShader->Use();
 	mScreenShader->SetInt("screenTexture", 0);
@@ -109,6 +114,7 @@ Renderer::Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cu
 	mImageFilters->invert = false;
 
 	SetupSkybox();
+	SetupForShadows();
 	SetupForHDR(SCREEN_WIDTH, SCREEN_HEIGHT);
 	SetupForDeferredShading(SCREEN_WIDTH, SCREEN_HEIGHT);
 	SetupFBO(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -142,22 +148,71 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 	//mSphereMesh->BindVAO();
 
 	// if doing deferred shading
+	// Only for PBR. (And light cubes obviously)
 	if (mDeferredShadingOn) {
 
-		// first bind G-Buffer Framebuffer
+		// --------- SHADOW PASS ---------
+
+		// using only one point light source right now
+		glm::vec3 lightPos = mShapeDS["Light Source"]->mTransform->position;
+
+		// Setting up shadow transforms for each face of the Cubemap
+		mShadowTransforms[0] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0));
+		mShadowTransforms[1] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0));
+		mShadowTransforms[2] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
+		mShadowTransforms[3] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0));
+		mShadowTransforms[4] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0));
+		mShadowTransforms[5] = mShadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0));
+
+		// Draw to cubemap depth texture to create shadow map
+		glViewport(0, 0, 1024, 1024);
+		glBindFramebuffer(GL_FRAMEBUFFER, mShadowDepthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		mPointShadowDepthShader->Use();
+		for (unsigned int i = 0; i < 6; ++i)
+			mPointShadowDepthShader->SetMat4("shadowMatrices[" + std::to_string(i) + "]", mShadowTransforms[i]);
+		mPointShadowDepthShader->SetFloat("farPlane", 25.0f);
+		mPointShadowDepthShader->SetVec3("lightPos", lightPos);
+		for (auto& [name, shape] : mShapeDS) {
+			if (shape->mShading != ShapeShading::LIGHT) {
+				glm::mat4 model = CreateModelMatrix(shape, pAudioPlayer);
+				mPointShadowDepthShader->SetMat4("model", model);
+				if (shape->mShape == "Sphere") {
+					mSphereMesh->BindVAO();
+					glDrawElements(GL_TRIANGLE_STRIP, mSphereMesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+				}
+				else if (shape->mShape == "Cube") {
+					mCubeMesh->BindVAO();
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
+				else {	
+					mQuadMesh->BindVAO();
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				}
+			}
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		// --------- GEOMETRY PASS ---------
+
+		// First bind G-Buffer Framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, mGBuffer);
 
-		// clear all color buffers and depth buffer
+		// Clear all color buffers and depth buffer
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(mClearColor.r, mClearColor.y, mClearColor.z, 1.0f);
 
-		// -------------- Load all geometry info of Phong-lit spheres into the FBO (multiple render targets) 
-		// Now only this: Load all geometry info of PBR-lit spheres into the FBO (multiple render targets) 
+		// Load all geometry info of PBR-lit spheres into the FBO (multiple render targets) 
 		for (auto& [name, shape] : mShapeDS) {
 			if (shape->mShading != ShapeShading::LIGHT) {
 				SetShapeAndDraw(shape, mDeferredShadingOn, pCamera, pAudioPlayer);
 			}
 		}
+
+
+		// ------ LIGHTING/COLOR PASS ------ 
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mHDRFBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -180,8 +235,13 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, mGBufferTextures[3]);
 
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, mShadowDepthCubeMap);
+
 		SetLightVarsInShader(mDeferredShadingLightingShaderPBR);
 		mDeferredShadingLightingShaderPBR->SetVec3("viewPos", pCamera->mPosition);
+		mDeferredShadingLightingShaderPBR->SetVec3("lightPos", lightPos);
+		mDeferredShadingLightingShaderPBR->SetFloat("farPlane", 25.0f);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -310,19 +370,26 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 
 
 void Renderer::SetupForShadows() {
-	glGenFramebuffers(1, &mShadowFBO);
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	
+	glGenFramebuffers(1, &mShadowDepthMapFBO);
 
-	glGenTextures(1, &mShadowFBO);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	// create depth cubemap texture
+	glGenTextures(1, &mShadowDepthCubeMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, mShadowDepthCubeMap);
+	for (unsigned int i = 0; i < 6; ++i) {
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+			GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, mShadowFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mShadowDepthMap, 0);
+	// attach depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, mShadowDepthMapFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, mShadowDepthCubeMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -497,9 +564,17 @@ void Renderer::SetVertexShaderVarsForDeferredShadingAndUse(Shape* pShape, Camera
 			}
 
 			glActiveTexture(GL_TEXTURE4);
+			if (pShape->mMaterialPBR->texturePack->depthMap) {
+				pShape->mMaterialPBR->texturePack->depthMap->Bind();
+				mGBufferShaderPBR->SetVec3("viewPos", pCamera->mPosition);
+			}
+
+			glActiveTexture(GL_TEXTURE5);
 			if (pShape->mMaterialPBR->texturePack->aoMap) {
 				pShape->mMaterialPBR->texturePack->aoMap->Bind();
 			}
+
+			mGBufferShaderPBR->SetFloat("heightScale", 0.1f);
 		}
 		else {
 			mGBufferShaderPBR->SetVec3("albedo", pShape->mMaterialPBR->albedo);
@@ -527,10 +602,10 @@ void Renderer::SetShaderVarsAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* 
 		shader->SetFloat("time", static_cast<float>(glfwGetTime()));
 	}
 	else if (pShape->mShading == ShapeShading::PHONG) {
-		if (pShape->mTexture) {
-			glActiveTexture(GL_TEXTURE0);
-			pShape->mTexture->Bind();
-		}
+		//if (pShape->mTexture) {
+		//	glActiveTexture(GL_TEXTURE0);
+		//	pShape->mTexture->Bind();
+		//}
 		SetLightVarsInShader(shader);
 		shader->SetVec3("material.ambient", pShape->mMaterial->ambient + glm::vec3(static_cast<float>(pAudioPlayer->GetData()) / 70000));
 		shader->SetVec3("material.diffuse", pShape->mMaterial->diffuse);
@@ -539,10 +614,10 @@ void Renderer::SetShaderVarsAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* 
 		shader->SetVec3("viewPos", pCamera->mPosition);
 	}
 	else if (pShape->mShading == ShapeShading::PBR) {
-		if (pShape->mTexture) {
-			glActiveTexture(GL_TEXTURE0);
-			pShape->mTexture->Bind();
-		}
+		//if (pShape->mTexture) {
+		//	glActiveTexture(GL_TEXTURE0);
+		//	pShape->mTexture->Bind();
+		//}
 		SetLightVarsInShader(shader);
 		shader->SetVec3("albedo", pShape->mMaterialPBR->albedo);
 		shader->SetFloat("metalness", pShape->mMaterialPBR->metalness);

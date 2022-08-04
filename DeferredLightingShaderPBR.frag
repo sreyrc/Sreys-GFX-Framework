@@ -23,6 +23,12 @@ uniform int numberOfLights;
 
 uniform vec3 viewPos;
 
+// Position of only one light source for now (named "Light Source")
+uniform vec3 lightPos;
+uniform float farPlane;
+
+uniform samplerCube shadowDepthCubeMap;
+
 const float PI = 3.14159265359;
 
 float NDFGGX(vec3 N, vec3 H, float alpha) {
@@ -50,6 +56,16 @@ float SmithGGX(vec3 N, vec3 V, vec3 L, float alpha) {
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float ShadowCalculation(vec3 fragPos) {
+	vec3 fragToLight = fragPos - lightPos;
+	float closestDepth = texture(shadowDepthCubeMap, fragToLight).r;
+	closestDepth *= farPlane;
+	float currentDepth = length(fragToLight);
+	float bias = 0.05;
+	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+	return shadow;
 }
 
 void main() {
@@ -95,7 +111,10 @@ void main() {
 	}
 
 	vec3 ambient = vec3(0.03) * albedo * ao;// * texture(myTexture, TexCoords).rgb;
-    vec3 color = ambient + Lo;
+
+	float shadow  = ShadowCalculation(FragPos);
+
+    vec3 color = ambient + (1.0 - shadow) * Lo;
 
     FragColor = vec4(color, 1.0);
 }
