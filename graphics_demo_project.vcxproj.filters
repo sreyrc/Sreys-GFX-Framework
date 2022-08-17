@@ -78,6 +78,9 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureHDR.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -152,6 +155,9 @@
     <ClInclude Include="QuadMesh.h">
       <Filter>Header Files\Meshes</Filter>
     </ClInclude>
+    <ClInclude Include="TextureHDR.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader.vert">
@@ -160,10 +166,10 @@
     <None Include="Shader.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="TexPhong.vert">
+    <None Include="PhongPBR.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="TexPhong.frag">
+    <None Include="Phong.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="ScreenShader.frag">
@@ -211,10 +217,10 @@
     <None Include="DeferredLightingShader.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="TexPhongModel.frag">
+    <None Include="PhongModel.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="TexPhongModel.vert">
+    <None Include="PhongModel.vert">
       <Filter>Shaders</Filter>
     </None>
     <None Include="DeferredLightingShaderPBR.frag">
@@ -230,6 +236,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="PointShadowDepth.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="EquiRecToCubemap.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="EquiRecToCubemap.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

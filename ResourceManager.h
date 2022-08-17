@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "Texture.h"
+#include "TextureHDR.h"
 #include "Cubemap.h"
 
 #include <fstream>
@@ -28,6 +29,21 @@ public:
 
 		stbi_set_flip_vertically_on_load(true);
 
+		std::vector<std::string> skyFaces {
+			"../resources/skybox/right.jpg",
+			"../resources/skybox/left.jpg",
+			"../resources/skybox/top.jpg",
+			"../resources/skybox/bottom.jpg",
+			"../resources/skybox/front.jpg",
+			"../resources/skybox/back.jpg",
+		};
+
+		AddCubeMap("Default", skyFaces);
+
+		AddHDRImagePairForIBL("Ditch_River", 
+			"../resources/IBL/Ditch_River/Ditch-River_2k.hdr", 
+			"../resources/IBL/Ditch_River/Ditch-River_Env.hdr");
+		
 		std::ifstream input;
 		input.open("../resources/texture_packs/Texture_Pack_List.txt");
 
@@ -80,6 +96,10 @@ public:
 		mCubemaps[name] = new Cubemap(facePaths);
 	}
 
+	void AddHDRImagePairForIBL(std::string name, std::string envMapBGPath, std::string envMapIrrPath) {
+		mHDRImagePairsForIBL[name] = std::make_pair(new TextureHDR(envMapBGPath), new TextureHDR(envMapIrrPath));
+	}
+
 	TexturePack* GetTexturePack(std::string name) {
 		if (mTexturePacks.find(name) != mTexturePacks.end()) {
 			return mTexturePacks[name];
@@ -92,6 +112,20 @@ public:
 	Texture* GetTexture(std::string name) {
 		if (mTextures.find(name) != mTextures.end()) {
 			return mTextures[name];
+		}
+		else {
+			return nullptr;
+		}
+	}
+
+	TextureHDR* GetHDRImage(std::string name, int index) {
+		if (mHDRImagePairsForIBL.find(name) != mHDRImagePairsForIBL.end()) {
+			if (index == 0) {
+				return mHDRImagePairsForIBL[name].first;
+			}
+			else {
+				return mHDRImagePairsForIBL[name].second;
+			}
 		}
 		else {
 			return nullptr;
@@ -118,5 +152,6 @@ public:
 private:
 	std::unordered_map<std::string, Texture*> mTextures;
 	std::unordered_map<std::string, TexturePack*> mTexturePacks;
+	std::unordered_map<std::string, std::pair<TextureHDR*, TextureHDR*>> mHDRImagePairsForIBL;
 	std::unordered_map<std::string, Cubemap*> mCubemaps;
 };

@@ -160,6 +160,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stbi_impl.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureHDR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioPlayer.h" />
@@ -186,11 +187,14 @@
     <ClInclude Include="SoundData.h" />
     <ClInclude Include="SphereMesh.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureHDR.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DeferredLightingShaderPBR.frag" />
     <None Include="DeferredLightingShader.frag" />
     <None Include="DeferredLightingShader.vert" />
+    <None Include="EquiRecToCubemap.frag" />
+    <None Include="EquiRecToCubemap.vert" />
     <None Include="GBufferShader.frag" />
     <None Include="GBufferShader.vert" />
     <None Include="GBufferShaderPBR.frag" />
@@ -210,10 +214,10 @@
     <None Include="Shader.vert" />
     <None Include="Skybox.frag" />
     <None Include="Skybox.vert" />
-    <None Include="TexPhong.frag" />
-    <None Include="TexPhong.vert" />
-    <None Include="TexPhongModel.frag" />
-    <None Include="TexPhongModel.vert" />
+    <None Include="Phong.frag" />
+    <None Include="PhongPBR.vert" />
+    <None Include="PhongModel.frag" />
+    <None Include="PhongModel.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
