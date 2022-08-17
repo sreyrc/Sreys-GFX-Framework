@@ -294,7 +294,7 @@ void Renderer::Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCa
 		//	SetLightVarsInShader(mModelShader);
 		//	model->Draw(mModelShader);
 		//}
-
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		//mSphereMesh->BindVAO();
 		for (const auto& [name, shape] : mShapeDS) {
 			// if shape is selected - edit stencil buffer (for outlining)
@@ -461,7 +461,7 @@ void Renderer::SetupForIBL(ResourceManager* pResourceManager) {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	mCaptureViews[0] = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 	mCaptureViews[1] = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -473,8 +473,34 @@ void Renderer::SetupForIBL(ResourceManager* pResourceManager) {
 
 	// ------ IBL PASS: HDR TO CUBEMAP CONVERSION ------
 
-	mHDRIBLTextureBG = pResourceManager->GetHDRImage("Ditch_River", 0);
+	GenerateCubemapFromEquiRecIrrMap("Ditch_River", pResourceManager);
+	/*mHDRIBLTextureBG = pResourceManager->GetHDRImage("Ditch_River", 0);
 	mHDRIBLTextureIrrMap = pResourceManager->GetHDRImage("Ditch_River", 1);
+
+	mEquiRecToCubeMapShader->Use();
+	mEquiRecToCubeMapShader->SetInt("equirectangularMap", 0);
+	mEquiRecToCubeMapShader->SetMat4("projection", mCaptureProj);
+
+	glActiveTexture(GL_TEXTURE0);
+	mHDRIBLTextureIrrMap->Bind();
+
+	glViewport(0, 0, 512, 512);
+	glBindFramebuffer(GL_FRAMEBUFFER, mCaptureFBO);
+
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		mEquiRecToCubeMapShader->SetMat4("view", mCaptureViews[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mEnvCubemap, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glBindVertexArray(mSkyVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
+}
+
+void Renderer::GenerateCubemapFromEquiRecIrrMap(std::string envMapName, ResourceManager* pResourceManager){
+	mHDRIBLTextureBG = pResourceManager->GetHDRImage(envMapName, 0);
+	mHDRIBLTextureIrrMap = pResourceManager->GetHDRImage(envMapName, 1);
 
 	mEquiRecToCubeMapShader->Use();
 	mEquiRecToCubeMapShader->SetInt("equirectangularMap", 0);
@@ -496,6 +522,7 @@ void Renderer::SetupForIBL(ResourceManager* pResourceManager) {
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
 
 void Renderer::SetupForDeferredShading(int SCREEN_WIDTH, int SCREEN_HEIGHT) {
 
@@ -749,7 +776,6 @@ void Renderer::SetShaderVarsAndUse(Shape* pShape, Camera* pCamera, AudioPlayer* 
 	else if (pShape->mShading == ShapeShading::LIGHT) {
 		glm::vec3 newVal = pShape->mMaterial->ambient - glm::vec3(0, pAudioPlayer->GetData() / 1000.0f, 0);
 		shader->SetVec3("lightColor", newVal);
-		std::cout << newVal.y << std::endl;
 	}
 }
 

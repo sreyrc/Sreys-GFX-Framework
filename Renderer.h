@@ -33,6 +33,7 @@ public:
 	~Renderer();
 
 	void Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	void GenerateCubemapFromEquiRecIrrMap(std::string envMapName, ResourceManager* pResourceManager);
 
 private:
 	// Setup Stuff

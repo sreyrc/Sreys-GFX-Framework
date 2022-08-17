@@ -62,6 +62,7 @@ public:
 		auto& shapeMap = pRenderer->GetShapeMap();
 		auto& textureMap = pResourceManager->GetTextureList();
 		auto& texturePackMap = pResourceManager->GetTexturePackList();
+		auto& envMapsMap = pResourceManager->GetHDRImagePairList();
 
 		// List of cubes in the scene
 		ImGui::Begin("Shape List");
@@ -213,9 +214,26 @@ public:
 		ImGui::Begin("Diffuse IBL"); {
 			ImGui::Checkbox("IBL", &pRenderer->mSkyboxOn);
 			// Show list of different env. maps to choose from
-			//if (pRenderer->mSkyboxOn) {
+			if (pRenderer->mSkyboxOn) {
+				if (ImGui::BeginListBox("Environments", ImVec2(200.0f, 100.0f))); {
+					for (auto& [name, envMap] : envMapsMap)
+					{
+						if (name == "") {
+							continue;
+						}
+						const bool is_selected = (mSelectedTexturePack == name);
+						if (ImGui::Selectable(name.c_str(), is_selected)) {
+							mSelectedEnvMap = name;
+							pRenderer->GenerateCubemapFromEquiRecIrrMap(mSelectedEnvMap, pResourceManager);
+							//pRenderer->SetTexturePackForShape(pResourceManager->GetTexturePack(mSelectedTexturePack), mSelectedShape);
+						}
 
-			//}
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndListBox();
+				}
+			}
 		}
 		ImGui::End();
 
@@ -287,7 +305,7 @@ private:
 	std::unordered_map <std::string, ShapeShading> mShapeShadingMap;
 	std::vector<std::string> mShapeGeometryList;
 	std::string mSelectedTexturePack = "Leather_Padded", mSelectedTrack,
-		mSelectedShape = "PBR Shape", mSelectedShapeShading = "Textured";
+		mSelectedShape = "PBR Shape", mSelectedShapeShading = "Textured", mSelectedEnvMap = "Ditch_River";
 	int mSelectedGeometry = 0;
 	int mShapeCount = 2;
 };

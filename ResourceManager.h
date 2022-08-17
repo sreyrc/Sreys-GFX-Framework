@@ -43,6 +43,10 @@ public:
 		AddHDRImagePairForIBL("Ditch_River", 
 			"../resources/IBL/Ditch_River/Ditch-River_2k.hdr", 
 			"../resources/IBL/Ditch_River/Ditch-River_Env.hdr");
+
+		AddHDRImagePairForIBL("Factory_Catwalk",
+			"../resources/IBL/Factory_Catwalk/Factory_Catwalk_2k.hdr",
+			"../resources/IBL/Factory_Catwalk/Factory_Catwalk_Env.hdr");
 		
 		std::ifstream input;
 		input.open("../resources/texture_packs/Texture_Pack_List.txt");
