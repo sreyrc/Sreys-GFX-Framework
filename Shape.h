@@ -70,9 +70,7 @@ public:
 			mMaterial->ambient = glm::vec3(1.0f); 
 		}
 
-		//mTexture = pResourceManager->GetTexture("Gravel");
-		mMaterialPBR->texturePack = pResourceManager->GetTexturePack("Stylized_Fur");
-		//mMaterialPBR->texturePackEnabled = true;
+		mMaterialPBR->texturePack = pResourceManager->GetTexturePack("Leather_Padded");
 	}
 
 	~Shape() {}

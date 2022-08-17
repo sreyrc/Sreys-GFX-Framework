@@ -1,4 +1,5 @@
-// Draw a line
+// Spawn Shit. They get Lit
+// Framework by Sreyash Raychaudhuri
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
@@ -37,7 +38,7 @@ int main() {
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "MORBSUS GFX Engine", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "A Sussy GFX Engine", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -60,18 +61,7 @@ int main() {
 
     pAudioHandler->Init();
 
-    std::vector<std::string> skyFaces {
-        "../resources/skybox/right.jpg",
-        "../resources/skybox/left.jpg",
-        "../resources/skybox/top.jpg",
-        "../resources/skybox/bottom.jpg",
-        "../resources/skybox/front.jpg",
-        "../resources/skybox/back.jpg",
-    };
-
-    pResourceManager->AddCubeMap("Default", skyFaces);
-
-    Renderer* pRenderer = new Renderer(SCREEN_WIDTH, SCREEN_HEIGHT, pResourceManager->GetCubeMap("Default"));
+    Renderer* pRenderer = new Renderer(SCREEN_WIDTH, SCREEN_HEIGHT, pResourceManager->GetCubeMap("Default"), pResourceManager);
     Editor* pEditor = new Editor(window);
 
     Camera* pCamera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));

@@ -29,7 +29,7 @@ public:
 
 		mSongs.erase("");
 
-		mCurrentSongFilePath = mSongs["Jhalak_Dikhlaja"];
+		mCurrentSongFilePath = mSongs["Gangnam_Style"];
 
 		std::cout << mSoundEngine->setMixedDataOutputReceiver(mSoundData) << '\n';
 	}

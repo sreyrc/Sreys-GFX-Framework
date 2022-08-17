@@ -29,7 +29,7 @@ public:
 		bool invert;
 	};
 
-	Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cubemap);
+	Renderer(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Cubemap* _cubemap, ResourceManager* pResourceManager);
 	~Renderer();
 
 	void Draw(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, Camera* pCamera, AudioPlayer* pAudioPlayer);
@@ -38,13 +38,14 @@ private:
 	// Setup Stuff
 	void SetupForShadows();
 	void SetupSkybox();
+	void SetupForIBL(ResourceManager* pResourceManager);
 	void SetupForDeferredShading(int SCREEN_WIDTH, int SCREEN_HEIGHT);
 	void SetupFBO(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetupForHDR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	void SetLightVarsInShader(Shader* shader);
 	void SetVertexShaderVarsForDeferredShadingAndUse(Shape* pCube, Camera* pCamera, AudioPlayer* pAudioPlayer);
 	void SetShaderVarsAndUse(Shape* pSphere, Camera* pCamera, AudioPlayer* pAudioPlayer);
-	void SetShapeAndDraw(Shape* pShape, bool defShadingOn, Camera* pCamera, AudioPlayer* pAudioPlayer);
+	void SetShapeAndDraw(Shape* pShape);
 	glm::mat4 CreateModelMatrix(Shape* pSphere, AudioPlayer* pAudioPlayer);
 	
 public:
@@ -95,7 +96,8 @@ private:
 
 	// Shaders
 	Shader* mScreenShader, *mSkyboxShader, *mOutlineShader, *mLightBlockShader, *mGBufferShader, *mGBufferShaderPBR,
-		*mDeferredShadingLightingShader, *mDeferredShadingLightingShaderPBR, *mHDRShader, *mModelShader, *mPointShadowDepthShader;
+		*mDeferredShadingLightingShader, *mDeferredShadingLightingShaderPBR, *mHDRShader, *mModelShader, *mPointShadowDepthShader,
+		*mEquiRecToCubeMapShader;
 	
 	// Proj matrix is common for all
 	glm::mat4 mProj;
@@ -105,7 +107,7 @@ private:
 	// Skybox Mesh
 	GLuint mSkyVAO, mSkyVBO;
 
-	// framebuffer for post-processing
+	// Framebuffer for post-processing
 	GLuint mRBO, mFBO, mTextureColorBuffer;
 
 	// FBO for HDR
@@ -118,11 +120,25 @@ private:
 	std::vector<glm::mat4> mShadowTransforms;
 	glm::mat4 mShadowProj;
 
-	// FBO for shadow maps
+	// FBO for Shadow map(s)
 	GLuint mShadowDepthMapFBO, mShadowDepthCubeMap;
 
+	// FBO for CubeMap for IBL
+	GLuint mCaptureFBO, mCaptureRBO;
+
+	// HDR texture for IBL
+	TextureHDR* mHDRIBLTextureBG, *mHDRIBLTextureIrrMap;
+	
+
+	// Cubemap for IBL
+	GLuint mEnvCubemap;
+
 	// Shaders that cubes can use. Each cube can decide which one to use
-	std::vector<Shader*> mSphereShaders;
+	std::vector<Shader*> mShapeShaders;
+
+	// For drawing equiangular tex onto cubemap for IBL
+	std::vector<glm::mat4> mCaptureViews;
+	glm::mat4 mCaptureProj;
 
 	GLfloat mSkyboxVertices[108] = {
 		// positions          

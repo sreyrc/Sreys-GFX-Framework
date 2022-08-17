@@ -83,11 +83,11 @@ public:
 			}
 			ImGui::EndListBox();
 		}
-		if (ImGui::Button("+")) {
+		if (ImGui::Button("Add Shape")) {
 			pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PBR));
 		}
 
-		if (ImGui::Button("Add 10")) {
+		if (ImGui::Button("Add 10 Shapes")) {
 			for (int i = 0; i < 10; i++) {
 				pRenderer->AddShape("Shape " + std::to_string(++mShapeCount), new Shape(pResourceManager, ShapeShading::PBR));
 			}
@@ -136,7 +136,9 @@ public:
 				ImGui::EndListBox();
 			}
 
-			ImGui::Checkbox("Enable Tex Pack", &shapeMap[mSelectedShape]->mMaterialPBR->texturePackEnabled);
+			if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
+				ImGui::Checkbox("Enable Tex Pack", &shapeMap[mSelectedShape]->mMaterialPBR->texturePackEnabled);
+			}
 
 			if (shapeMap[mSelectedShape]->mMaterialPBR->texturePackEnabled) {
 				if (shapeMap[mSelectedShape]->mShading == ShapeShading::PBR) {
@@ -200,13 +202,20 @@ public:
 		
 		ImGui::End();
 
-		ImGui::Begin("Filters");
-		{
+		ImGui::Begin("Filters"); {
 			ImGui::SliderFloat("Saturation", &pRenderer->mImageFilters->saturation, 0, 1);
 			ImGui::SliderFloat("Blur", &pRenderer->mImageFilters->blur, 0, 1);
 			ImGui::SliderFloat("Outline", &pRenderer->mImageFilters->outline, 0, 1);
 			ImGui::Checkbox("Invert", &pRenderer->mImageFilters->invert);
-			ImGui::Checkbox("Skybox", &pRenderer->mSkyboxOn);
+		}
+		ImGui::End();
+
+		ImGui::Begin("Diffuse IBL"); {
+			ImGui::Checkbox("IBL", &pRenderer->mSkyboxOn);
+			// Show list of different env. maps to choose from
+			//if (pRenderer->mSkyboxOn) {
+
+			//}
 		}
 		ImGui::End();
 
@@ -277,7 +286,7 @@ public:
 private:
 	std::unordered_map <std::string, ShapeShading> mShapeShadingMap;
 	std::vector<std::string> mShapeGeometryList;
-	std::string mSelectedTexturePack = "Stylized_Fur", mSelectedTrack,
+	std::string mSelectedTexturePack = "Leather_Padded", mSelectedTrack,
 		mSelectedShape = "PBR Shape", mSelectedShapeShading = "Textured";
 	int mSelectedGeometry = 0;
 	int mShapeCount = 2;

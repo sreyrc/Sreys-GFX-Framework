@@ -63,7 +63,7 @@ float ShadowCalculation(vec3 fragPos) {
 	float closestDepth = texture(shadowDepthCubeMap, fragToLight).r;
 	closestDepth *= farPlane;
 	float currentDepth = length(fragToLight);
-	float bias = 0.05;
+	float bias = 0.05f;
 	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 	return shadow;
 }

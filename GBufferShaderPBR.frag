@@ -32,33 +32,33 @@ uniform bool metallicMapOn;
 
 uniform float heightScale;
 
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir) {
-	float height = texture(depthMap, texCoords).r;
-	return texCoords - ((viewDir.xy / viewDir.z) * height * heightScale);
-}
+//vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir) {
+//	float height = texture(depthMap, texCoords).r;
+//	return texCoords - ((viewDir.xy / viewDir.z) * height * heightScale);
+//}
 
 void main() {
 	gPosition = vec4(FragPos, 1.0f);
 
 	if (packEnabled) {
 
-		vec3 TangentViewDir = normalize(TangentViewPos - TangentFragPos);
-		vec2 texCoords = ParallaxMapping(TexCoords, TangentViewDir);
+//		vec3 TangentViewDir = normalize(TangentViewPos - TangentFragPos);
+//		vec2 texCoords = ParallaxMapping(TexCoords, TangentViewDir);
 
-		if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-			discard;
+//		if (texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+//			discard;
 
-		vec3 normal = texture(normalMap, texCoords).rgb;
+		vec3 normal = texture(normalMap, TexCoords).rgb;
 		normal  = normal * 2.0f - 1.0f;
 		gNormal = vec4(normalize(TBN * normal), 1.0f);
 
-		gAlbedo = vec4(texture(albedoMap, texCoords).rgb, 1.0f);
+		gAlbedo = vec4(texture(albedoMap, TexCoords).rgb, 1.0f);
 		
 		if (metallicMapOn) {
-			gRoughMetalAO = vec4(texture(roughnessMap, texCoords).r, texture(metallicMap, texCoords).r, texture(aoMap, texCoords).r, 1.0f);
+			gRoughMetalAO = vec4(texture(roughnessMap, TexCoords).r, texture(metallicMap, TexCoords).r, texture(aoMap, TexCoords).r, 1.0f);
 		}
 		else {
-			gRoughMetalAO = vec4(texture(roughnessMap, texCoords).r, texture(roughnessMap, texCoords).g, texture(aoMap, texCoords).r, 1.0f);
+			gRoughMetalAO = vec4(texture(roughnessMap, TexCoords).r, texture(roughnessMap, TexCoords).g, texture(aoMap, TexCoords).r, 1.0f);
 		}
 	}
 	else {
