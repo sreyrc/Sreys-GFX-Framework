@@ -1,6 +1,6 @@
 # Srey's GFX Demo Framework 
 
-A Custom-Built OpenGL and C++ Graphics Framework 
+A Custom-Built OpenGL and C++ Graphics Framework by Sreyash Raychaudhuri
 
 Add or remove shapes in the scene. You can add cubes, spheres or quads - and do whatever you want with them. 
 Transform them and apply the shading you desire for each shape: Shapes can be light sources, or be shaded according to the Blinn-Phong or PBR models - upto the user.
@@ -25,7 +25,7 @@ Other features:
 * Resource Manager to store textures, texture packs and environment maps
 * Resource loading using Text File serialization
 * Editor UI made using Dear ImGUI which allows shape selection, shape properties configuration, 
-  G-Buffer display when doing Deferred Shading, environment map selection, filters and more.  
+  environment map selection, filters and more.  
 * Simple Audio Player: Audio data is also used to scale the shapes. The shapes dance, yes.
 
 Important Notes:
