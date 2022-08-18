@@ -23,6 +23,7 @@ Graphics Features:
 
 Other features:
 * Resource Manager to store textures, texture packs and environment maps
+* Resource loading using Text File serialization
 * Editor UI made using Dear ImGUI which allows shape selection, shape properties configuration, 
   G-Buffer display when doing Deferred Shading, environment map selection, filters and more.  
 * Simple Audio Player: Audio data is also used to scale the shapes. The shapes dance, yes.
