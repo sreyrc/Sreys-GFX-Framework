@@ -2,12 +2,12 @@
 
 A Custom-Built OpenGL and C++ Graphics Framework 
 
-Add or remove shapes in the scene. You can add cubes, spheres or quads - and do whatever you want with them
-Transform them and apply the shading you desire for each shape: Shapes can be light sources, or be shaded according to the Blinn-Phong or PBR models - upto the user
-Deferred Shading is setup only PBR Rendering. 
+Add or remove shapes in the scene. You can add cubes, spheres or quads - and do whatever you want with them. 
+Transform them and apply the shading you desire for each shape: Shapes can be light sources, or be shaded according to the Blinn-Phong or PBR models - upto the user.
+Apply texture packs or just do pain shading, apply filters, toggle deferred shading, choose environments and more. Important Note: Deferred Shading is only setup for PBR.
 
-Oh, And the engine has audio!  
-Select any song to make your shapes dance. 
+Also, the engine has audio!  
+Select any song and let your shapes groove. 
 
 Some salient features are listed as follows:
 
@@ -26,5 +26,4 @@ Other features:
 * Editor UI made using Dear ImGUI which allows shape selection, shape properties configuration, 
   G-Buffer display when doing Deferred Shading, environment map selection, filters and more.  
 * Simple Audio Player: Audio data is also used to scale the shapes. The shapes dance, yes.
-
 
