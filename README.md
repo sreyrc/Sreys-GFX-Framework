@@ -12,8 +12,8 @@ Select any song and let your shapes groove.
 Some salient features are listed as follows:
 
 Graphics Features:
-* PBR lighting using texture maps or plain shading
-* Diffuse IBL
+* Physically Based Rendering (PBR) using texture maps or plain shading
+* Diffuse Image Based Lighting (IBL)
 * Blinn-Phong Lighting
 * Deferred Shading (Only for PBR)
 * Point Shadows (Only works with deferred rendering and for one light source right now)
@@ -30,6 +30,6 @@ Other features:
 
 Important Notes:
 * Shadow Mapping only works with Deferred Shading for now
-* Outlines around selected shapes only appear when Def. Shading is off
+* Outlines around selected shapes appear only when Def. Shading is off
 * Texture Packs don't work on Cubes and Quads yet. For these forms of shading works just fine.
 
