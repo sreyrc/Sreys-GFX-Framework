@@ -27,3 +27,8 @@ Other features:
   G-Buffer display when doing Deferred Shading, environment map selection, filters and more.  
 * Simple Audio Player: Audio data is also used to scale the shapes. The shapes dance, yes.
 
+Important Notes:
+* Shadow Mapping only works with Deferred Shading for now
+* Outlines around selected shapes only appear when Def. Shading is off
+* Texture Packs don't work on Cubes and Quads yet. For these forms of shading works just fine.
+
