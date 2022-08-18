@@ -19,7 +19,7 @@ Graphics Features:
 * Point Shadows (Only works with deferred rendering and for one light source right now)
 * Normal Mapping
 * Post-Processing filters: Saturation, Inversion and Outlines
-* HDR
+* HDR and Tone-mapping
 
 Other features:
 * Resource Manager to store textures, texture packs and environment maps
