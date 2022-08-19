@@ -31,5 +31,5 @@ Other features:
 Important Notes:
 * Shadow Mapping only works with Deferred Shading for now
 * Outlines around selected shapes appear only when Def. Shading is off
-* Texture Packs don't work on Cubes and Quads yet. For these forms of shading works just fine.
+* Texture Packs don't work on Cubes and Quads yet. For these other forms of shading works just fine.
 
