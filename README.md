@@ -21,13 +21,6 @@ Graphics Features:
 * Post-Processing filters: Saturation, Inversion and Outlines
 * HDR and Tone-mapping
 
-Other features:
-* Resource Manager to store textures, texture packs and environment maps
-* Resource loading using Text File serialization
-* Editor UI made using Dear ImGUI which allows shape selection, shape properties configuration, 
-  environment map selection, filters and more.  
-* Simple Audio Player: Audio data is also used to scale the shapes. The shapes dance, yes.
-
 Important Notes:
 * Shadow Mapping only works with Deferred Shading for now
 * Outlines around selected shapes appear only when Def. Shading is off
